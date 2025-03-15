@@ -32,40 +32,21 @@ export default function Login() {
             objectFit="cover"
             priority
           />
-          <div className="absolute inset-0 bg-black bg-opacity-10" />
-        </div>
-        <div className="absolute top-10 left-10 z-10">
-          <div className="flex items-center">
-            <div className="text-white text-4xl font-bold">
-              <span className="flex items-center">
-                <div className="h-10 w-10 mr-2">
-                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M3 9L12 2L21 9V20C21 20.5304 20.7893 21.0391 20.4142 21.4142C20.0391 21.7893 19.5304 22 19 22H5C4.46957 22 3.96086 21.7893 3.58579 21.4142C3.21071 21.0391 3 20.5304 3 20V9Z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </div>
-                Build
-                <br />
-                Better
-              </span>
-            </div>
-          </div>
         </div>
       </div>
 
       {/* Right side - Login Form */}
       <div className="w-full lg:w-1/2 flex flex-col justify-center px-6 md:px-12 lg:px-20 xl:px-24">
-        <div className="mb-8 lg:hidden">
-          <div className="flex items-center justify-center">
-            <div className="h-8 w-8 mr-2">
-              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M3 9L12 2L21 9V20C21 20.5304 20.7893 21.0391 20.4142 21.4142C20.0391 21.7893 19.5304 22 19 22H5C4.46957 22 3.96086 21.7893 3.58579 21.4142C3.21071 21.0391 3 20.5304 3 20V9Z" stroke="#1E3A34" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </div>
-            <span className="text-gray-800 text-2xl font-semibold">Build Better</span>
-          </div>
-        </div>
-        
         <div className="max-w-md mx-auto w-full">
+        <div className="mb-8 lg:hidden flex items-center justify-center">
+          <Image
+            src="/logo.png" 
+            alt="Logo"
+            width={128}  // Set explicit width
+            height={48}  // Set explicit height
+            priority
+          />
+      </div>
           <h1 className="text-2xl font-semibold text-gray-800 mb-2">Masuk ke Akun</h1>
           <p className="text-gray-600 mb-8">
             Selamat Datang Kembali! Lengkapi e-mail dan kata sandi untuk masuk ke akunmu:
@@ -111,19 +92,9 @@ export default function Login() {
               </div>
             </div>
             
-            <div className="flex justify-end mb-6">
-              <a href="#" className="text-sm text-gray-600 hover:text-green-700">
+            <div className="flex justify-end mb-10">
                 Lupa kata sandi?
-              </a>
-            </div>
-            
-            <div className="text-sm text-center mb-6">
-              <p className="text-gray-600">
-                Hubungi kami di{" "}
-                <a href="mailto:app.buildbetter@gmail.com" className="text-green-700 hover:underline">
-                  app.buildbetter@gmail.com
-                </a>
-              </p>
+                Hubungi kami di app.builobetter@gmail.com
             </div>
             
             <button
