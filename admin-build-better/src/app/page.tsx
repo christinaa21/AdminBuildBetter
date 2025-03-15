@@ -38,47 +38,44 @@ export default function Login() {
       {/* Right side - Login Form */}
       <div className="w-full lg:w-1/2 flex flex-col justify-center px-6 md:px-12 lg:px-20 xl:px-24">
         <div className="max-w-md mx-auto w-full">
-        <div className="mb-8 lg:hidden flex items-center justify-center">
+        <div className="mb-8 flex items-center justify-left">
           <Image
             src="/logo.png" 
             alt="Logo"
-            width={128}  // Set explicit width
-            height={48}  // Set explicit height
+            width={164}  // Set explicit width
+            height={56}  // Set explicit height
+            layout="intrinsic"
             priority
           />
-      </div>
-          <h1 className="text-2xl font-semibold text-gray-800 mb-2">Masuk ke Akun</h1>
-          <p className="text-gray-600 mb-8">
+        </div>
+          <h1 className="text-2xl font-semibold text-customGreen-300 mb-2 ">Masuk ke Akun</h1>
+          <p className="text-customGreen-300 mb-8">
             Selamat Datang Kembali! Lengkapi e-mail dan kata sandi untuk masuk ke akunmu:
           </p>
           
           <form onSubmit={handleSubmit}>
             <div className="mb-6">
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                E-mail
-              </label>
+              
               <input
                 id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
+                className="w-full px-4 py-3 border border-customGreen-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
                 placeholder="E-mail"
                 required
               />
             </div>
             
             <div className="mb-4">
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                Kata sandi
-              </label>
+              
               <div className="relative">
                 <input
                   id="password"
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-customGreen-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
                   placeholder="Kata sandi"
                   required
                 />
@@ -92,9 +89,9 @@ export default function Login() {
               </div>
             </div>
             
-            <div className="flex justify-end mb-10">
-                Lupa kata sandi?
-                Hubungi kami di app.builobetter@gmail.com
+            <div className="flex justify-end mb-10 text-sm">
+              Lupa kata sandi?
+              Hubungi kami di app.buildbetter@gmail.com
             </div>
             
             <button
