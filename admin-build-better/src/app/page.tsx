@@ -1,8 +1,11 @@
 'use client'
+
 import { useState } from 'react';
 import Image from 'next/image';
 import Head from 'next/head';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
+import Button from '@/components/Button';
+import { typography } from '../../utils/typography';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -16,7 +19,7 @@ export default function Login() {
   };
 
   return (
-    <div className="flex min-h-screen bg-white">
+    <div className="flex min-h-screen bg-custom-white-50">
       <Head>
         <title>Build Better | Login</title>
         <meta name="description" content="Login to your Build Better account" />
@@ -28,8 +31,8 @@ export default function Login() {
           <Image
             src="/login.png" 
             alt="Sustainable house with solar panels"
-            layout="fill"
-            objectFit="cover"
+            fill
+            style={{ objectFit: 'cover' }}
             priority
           />
         </div>
@@ -38,68 +41,72 @@ export default function Login() {
       {/* Right side - Login Form */}
       <div className="w-full lg:w-1/2 flex flex-col justify-center px-6 md:px-12 lg:px-20 xl:px-24">
         <div className="max-w-md mx-auto w-full">
-        <div className="mb-8 flex items-center justify-left">
-          <Image
-            src="/logo.png" 
-            alt="Logo"
-            width={164}  // Set explicit width
-            height={56}  // Set explicit height
-            layout="intrinsic"
-            priority
-          />
-        </div>
-          <h1 className="text-2xl font-semibold text-customGreen-300 mb-2 ">Masuk ke Akun</h1>
-          <p className="text-customGreen-300 mb-8">
-            Selamat Datang Kembali! Lengkapi e-mail dan kata sandi untuk masuk ke akunmu:
+          <div className="mb-8 flex items-center justify-left">
+            <Image
+              src="/logo.png" 
+              alt="Logo"
+              width={164}
+              height={56}
+              style={{ width: 'auto', height: 'auto' }}
+              priority
+            />
+          </div>
+          
+          <h1 className={`${typography.title()} text-custom-green-300 mb-2`}>Masuk ke Akun</h1>
+          <p className={`${typography.body1()} text-custom-green-300 mb-8`}>
+            Selamat datang kembali! Lengkapi e-mail dan kata sandi untuk masuk ke akunmu:
           </p>
           
           <form onSubmit={handleSubmit}>
             <div className="mb-6">
-              
               <input
                 id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 border border-customGreen-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
+                className={`w-full px-4 py-3 border border-custom-green-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-custom-green-200 focus:border-transparent ${typography.body2()}`}
                 placeholder="E-mail"
                 required
               />
             </div>
             
             <div className="mb-4">
-              
               <div className="relative">
                 <input
                   id="password"
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 border border-customGreen-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
+                  className={`w-full px-4 py-3 border border-custom-green-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-custom-green-200 focus:border-transparent ${typography.body2()}`}
                   placeholder="Kata sandi"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-custom-gray-200"
                 >
                   {showPassword ? <FiEyeOff size={20} /> : <FiEye size={20} />}
                 </button>
               </div>
             </div>
             
-            <div className="flex justify-end mb-10 text-sm">
-              Lupa kata sandi?
-              Hubungi kami di app.buildbetter@gmail.com
+            <div className="flex justify-end mb-10">
+              <p className={`${typography.caption()} text-custom-gray-200`}>
+                Lupa kata sandi?
+                <a href="mailto:app.buildbetter@gmail.com" className="text-custom-green-300 ml-1 hover:underline">
+                  Hubungi kami di app.buildbetter@gmail.com
+                </a>
+              </p>
             </div>
             
-            <button
+            <Button 
+              title="Login" 
+              variant="primary"
+              fullWidth={true}
               type="submit"
-              className="w-full bg-green-800 text-white py-3 rounded-md hover:bg-green-900 focus:outline-none focus:ring-2 focus:ring-green-600 focus:ring-opacity-50 transition"
-            >
-              Login
-            </button>
+              className="font-medium"
+            />
           </form>
         </div>
       </div>

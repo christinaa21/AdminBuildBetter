@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { poppins } from "../../styles/fonts";
+import { poppins } from "../../utils/fonts";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -14,9 +14,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={poppins.variable}
-      >
+      <body className={poppins.variable}>
         {children}
       </body>
     </html>

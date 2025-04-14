@@ -3,39 +3,31 @@
 @tailwind components;
 @tailwind utilities;
 
+@theme {
+  --color-custom-white-50: #FFFFFF;
+  --color-custom-white-100: #F5F5F9;
+
+  --color-custom-gray-50: #D9D9D9;
+  --color-custom-gray-100: #C6C6C6;
+  --color-custom-gray-200: #ABABB0;
+
+  --color-custom-green-50: #BBCBCD;
+  --color-custom-green-100: #ABC4BE;
+  --color-custom-green-200: #45605A;
+  --color-custom-green-300: #30534B;
+  --color-custom-green-400: #36534D;
+  --color-custom-green-500: #15322C;
+  --color-custom-green-600: #1D322D;
+  --color-custom-green-700: #0E1917;
+
+  --color-custom-olive-50: #3F473D;
+  --color-custom-olive-100: #222920;
+}
+
 :root {
-  --custom-white-50: #FFFFFF;
-  --custom-white-100: #F5F5F9;
-
-  --custom-gray-50: #D9D9D9;
-  --custom-gray-100: #C6C6C6;
-  --custom-gray-200: #ABABB0;
-
-  --custom-green-50: #BBCBCD;
-  --custom-green-100: #ABC4BE;
-  --custom-green-200: #45605A;
-  --custom-green-300: #30534B;
-  --custom-green-400: #36534D;
-  --custom-green-500: #15322C;
-  --custom-green-600: #1D322D;
-  --custom-green-700: #0E1917;
-
-  --custom-olive-50: #3F473D;
-  --custom-olive-100: #222920;
-
   --font-poppins: 'Poppins', sans-serif;
 }
 
 body {
-  background-color: var(--custom-white-50);
-  color: var(--custom-green-300);
-
   font-family: var(--font-poppins);
 }
-
-/* Utility classes using CSS variables */
-.text-custom-green-300 { color: var(--custom-green-300); }
-.bg-custom-green-300 { background-color: var(--custom-green-300); }
-
-.text-custom-gray-100 { color: var(--custom-gray-100); }
-.bg-custom-gray-100 { background-color: var(--custom-gray-100); }
