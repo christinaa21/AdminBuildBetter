@@ -2,10 +2,9 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import Head from 'next/head';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
 import Button from '@/components/Button';
-import { typography } from '../../utils/typography';
+import { H1, Body, Caption, Text } from '@/components/Typography';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -20,17 +19,12 @@ export default function Login() {
 
   return (
     <div className="flex min-h-screen bg-custom-white-50">
-      <Head>
-        <title>Build Better | Login</title>
-        <meta name="description" content="Login to your Build Better account" />
-      </Head>
-
       {/* Left side - Image */}
       <div className="hidden lg:block lg:w-1/2 relative">
         <div className="absolute inset-0">
           <Image
             src="/login.png" 
-            alt="Sustainable house with solar panels"
+            alt="Login Image"
             fill
             style={{ objectFit: 'cover' }}
             priority
@@ -45,17 +39,16 @@ export default function Login() {
             <Image
               src="/logo.png" 
               alt="Logo"
-              width={164}
-              height={56}
-              style={{ width: 'auto', height: 'auto' }}
+              width={150}
+              height={60}
               priority
             />
           </div>
           
-          <h1 className={`${typography.title()} text-custom-green-300 mb-2`}>Masuk ke Akun</h1>
-          <p className={`${typography.body1()} text-custom-green-300 mb-8`}>
+          <H1 className="text-custom-green-300 mb-2">Masuk ke Akun</H1>
+          <Body className="text-custom-green-300 mb-8">
             Selamat datang kembali! Lengkapi e-mail dan kata sandi untuk masuk ke akunmu:
-          </p>
+          </Body>
           
           <form onSubmit={handleSubmit}>
             <div className="mb-6">
@@ -64,7 +57,7 @@ export default function Login() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className={`w-full px-4 py-3 border border-custom-green-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-custom-green-200 focus:border-transparent ${typography.body2()}`}
+                className="w-full px-4 py-3 border border-custom-green-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-custom-green-200 focus:border-transparent font-poppins text-sm leading-[22px]"
                 placeholder="E-mail"
                 required
               />
@@ -77,7 +70,7 @@ export default function Login() {
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className={`w-full px-4 py-3 border border-custom-green-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-custom-green-200 focus:border-transparent ${typography.body2()}`}
+                  className="w-full px-4 py-3 border border-custom-green-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-custom-green-200 focus:border-transparent font-poppins text-sm leading-[22px]"
                   placeholder="Kata sandi"
                   required
                 />
@@ -92,12 +85,12 @@ export default function Login() {
             </div>
             
             <div className="flex justify-end mb-10">
-              <p className={`${typography.caption()} text-custom-gray-200`}>
+              <Caption className="text-custom-gray-200">
                 Lupa kata sandi?
                 <a href="mailto:app.buildbetter@gmail.com" className="text-custom-green-300 ml-1 hover:underline">
                   Hubungi kami di app.buildbetter@gmail.com
                 </a>
-              </p>
+              </Caption>
             </div>
             
             <Button 

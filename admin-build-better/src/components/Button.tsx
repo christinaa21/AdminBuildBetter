@@ -1,22 +1,60 @@
+// components/Button.tsx
 'use client'
 
 import React from 'react';
-import { typography } from '../../utils/typography';
+import { cva, type VariantProps } from 'class-variance-authority';
 
-interface ButtonProps {
+// Define button variants using class-variance-authority
+const buttonStyles = cva(
+  // Base styles
+  "rounded-2xl py-3 px-6 transition-colors duration-200 flex items-center justify-center", 
+  {
+    variants: {
+      variant: {
+        primary: "bg-custom-green-300 hover:bg-custom-green-500 text-custom-white-50 outline-5 outline-double outline-custom-green-300",
+        outline: "bg-custom-white-50 border border-custom-green-300 hover:bg-custom-white-100 text-custom-green-300",
+      },
+      fullWidth: {
+        true: "w-full",
+        false: "",
+      },
+      isDisabled: {  // renamed from disabled to avoid conflict
+        true: "opacity-50 cursor-not-allowed",
+        false: "cursor-pointer",
+      },
+      size: {
+        sm: "py-2 px-4 text-sm",
+        md: "py-3 px-6",
+        lg: "py-4 px-8 text-lg",
+      },
+      iconPosition: {
+        left: "flex-row",
+        right: "flex-row-reverse",
+      },
+    },
+    defaultVariants: {
+      variant: "primary",
+      fullWidth: false,
+      isDisabled: false,
+      size: "md",
+      iconPosition: "left",
+    },
+  }
+);
+
+// Define button props with class-variance-authority types
+interface ButtonProps extends 
+  React.ButtonHTMLAttributes<HTMLButtonElement> {
   title: string;
-  variant?: 'primary' | 'outline';
+  variant?: "primary" | "outline";
   icon?: React.ReactNode;
-  iconPosition?: 'left' | 'right';
+  iconPosition?: "left" | "right";
   onPress?: (event?: React.MouseEvent<HTMLButtonElement>) => void;
-  disabled?: boolean;
-  selected?: boolean;
-  className?: string;
-  textClassName?: string;
   fullWidth?: boolean;
-  type?: 'button' | 'submit' | 'reset';
+  size?: "sm" | "md" | "lg";
+  textClassName?: string;
 }
- 
+
 const Button: React.FC<ButtonProps> = ({
   title,
   variant = 'primary',
@@ -27,42 +65,32 @@ const Button: React.FC<ButtonProps> = ({
   className = '',
   textClassName = '',
   fullWidth = false,
+  size = 'md',
   type = 'button',
+  ...props
 }) => {
-  // Base styles for all buttons
-  const baseStyles = "rounded-2xl py-3 px-6 transition-colors duration-200";
-  
-  // Width styles
-  const widthStyles = fullWidth ? "w-full" : "";
-  
-  // Variant specific styles
-  const variantStyles = variant === 'primary'
-    ? "bg-custom-green-300 hover:bg-custom-green-500 text-custom-white-50 outline-5 outline-double outline-custom-green-300"
-    : "bg-custom-white-50 border border-custom-green-300 hover:bg-custom-white-100 text-custom-green-300";
-  
-  // Disabled styles
-  const disabledStyles = disabled
-    ? "opacity-50 cursor-not-allowed"
-    : "cursor-pointer";
-
-  // Typography
-  const textStyles = typography.subtitle2();
-
   return (
     <button
       onClick={onPress}
       disabled={disabled}
-      className={`${baseStyles} ${variantStyles} ${widthStyles} ${disabledStyles} ${className}`}
+      className={`${buttonStyles({ 
+        variant, 
+        fullWidth, 
+        isDisabled: disabled, // map disabled to isDisabled
+        size, 
+        iconPosition 
+      })} ${className}`}
       type={type}
+      {...props}
     >
-      <div className={`flex items-center justify-center ${iconPosition === 'right' ? 'flex-row-reverse' : 'flex-row'}`}>
-        {icon && (
-          <span className={`${iconPosition === 'right' ? 'ml-2' : 'mr-2'}`}>
-            {icon}
-          </span>
-        )}
-        <span className={`${textStyles} ${textClassName}`}>{title}</span>
-      </div>
+      {icon && (
+        <span className={`${iconPosition === 'right' ? 'ml-2' : 'mr-2'}`}>
+          {icon}
+        </span>
+      )}
+      <span className={`font-poppins font-medium text-sm leading-[22px] ${textClassName}`}>
+        {title}
+      </span>
     </button>
   );
 };
