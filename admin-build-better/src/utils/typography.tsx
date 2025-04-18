@@ -134,7 +134,7 @@ export const typography = {
     variants: typographyVariants,
     defaultVariants: {
       size: 'xs',
-      weight: 'medium',
+      weight: 'normal',
       leading: 'normal',
       font: 'poppins',
     },

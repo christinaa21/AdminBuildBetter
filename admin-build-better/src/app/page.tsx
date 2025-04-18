@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
 import Button from '@/components/Button';
-import { H1, Body, Caption, Text } from '@/components/Typography';
+import { H1, H2, Body, Caption, Text } from '@/components/Typography';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -15,6 +15,7 @@ export default function Login() {
     e.preventDefault();
     // Handle login logic here
     console.log('Login attempt with:', { email, password });
+    window.location.href = "/rumah";
   };
 
   return (
@@ -57,7 +58,7 @@ export default function Login() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 border border-custom-green-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-custom-green-200 focus:border-transparent font-poppins text-sm leading-[22px]"
+                className="w-full px-4 py-3 border border-custom-green-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-custom-green-200 focus:border-transparent font-poppins text-sm leading-[22px] text-custom-olive-50"
                 placeholder="E-mail"
                 required
               />
@@ -70,7 +71,7 @@ export default function Login() {
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 border border-custom-green-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-custom-green-200 focus:border-transparent font-poppins text-sm leading-[22px]"
+                  className="w-full px-4 py-3 border border-custom-green-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-custom-green-200 focus:border-transparent font-poppins text-sm leading-[22px] text-custom-olive-50"
                   placeholder="Kata sandi"
                   required
                 />
@@ -85,9 +86,9 @@ export default function Login() {
             </div>
             
             <div className="flex justify-end mb-10">
-              <Caption className="text-custom-gray-200">
+              <Caption className="text-gray-400">
                 Lupa kata sandi?
-                <a href="mailto:app.buildbetter@gmail.com" className="text-custom-green-300 ml-1 hover:underline">
+                <a href="mailto:app.buildbetter@gmail.com" className="text-custom-green-200 ml-1 hover:underline">
                   Hubungi kami di app.buildbetter@gmail.com
                 </a>
               </Caption>

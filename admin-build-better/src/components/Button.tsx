@@ -7,7 +7,7 @@ import { cva, type VariantProps } from 'class-variance-authority';
 // Define button variants using class-variance-authority
 const buttonStyles = cva(
   // Base styles
-  "rounded-2xl py-3 px-6 transition-colors duration-200 flex items-center justify-center", 
+  "rounded-2xl transition-colors duration-200 flex items-center justify-center", 
   {
     variants: {
       variant: {
@@ -88,7 +88,7 @@ const Button: React.FC<ButtonProps> = ({
           {icon}
         </span>
       )}
-      <span className={`font-poppins font-medium text-sm leading-[22px] ${textClassName}`}>
+      <span className={`font-poppins font-medium text-sm leading-snug ${textClassName}`}>
         {title}
       </span>
     </button>

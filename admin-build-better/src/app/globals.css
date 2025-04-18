@@ -11,6 +11,7 @@
   --color-custom-gray-100: #C6C6C6;
   --color-custom-gray-200: #ABABB0;
 
+  --color-custom-green-25: #CAE1DB;
   --color-custom-green-50: #BBCBCD;
   --color-custom-green-100: #ABC4BE;
   --color-custom-green-200: #45605A;
@@ -26,8 +27,15 @@
 
 :root {
   --font-poppins: 'Poppins', sans-serif;
+  --color-custom-white-100: rgb(245, 249, 246);
 }
 
 body {
   font-family: var(--font-poppins);
+  background: linear-gradient(
+    to bottom,
+    rgb(202, 225, 219),
+    rgb(248, 250, 248) 260px
+  );
+  min-height: 100vh;
 }
