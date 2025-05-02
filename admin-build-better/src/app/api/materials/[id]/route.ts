@@ -1,42 +1,41 @@
 // File: app/api/materials/[id]/route.ts
-// For handling PATCH, GET, DELETE operations on specific material IDs
-import { NextRequest } from 'next/server';
+// For handling PATCH, GET operations on specific material IDs
+import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(
   request: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const materialId = context.params.id;
-
+    // Get the material ID from params
+    const materialId = params.id;
+    
+    // Get the authorization header from the incoming request
     const authHeader = request.headers.get('Authorization');
-
+    
+    // Forward the request to the actual API
     const response = await fetch(`http://54.153.132.144:8080/api/v1/materials/${materialId}`, {
       method: 'GET',
       headers: {
         ...(authHeader ? { 'Authorization': authHeader } : {})
       },
     });
-
+    
+    // Get the response data
     const data = await response.json();
-
-    return new Response(JSON.stringify(data), {
+    
+    // Return the response with appropriate headers
+    return NextResponse.json(data, {
       status: response.status,
-      headers: {
-        'Content-Type': 'application/json',
-      },
     });
   } catch (error) {
     console.error('Error in material GET by ID API proxy:', error);
-    return new Response(JSON.stringify({
+    return NextResponse.json({
       code: 500,
       status: 'INTERNAL_SERVER_ERROR',
       error: 'An error occurred while processing your request'
-    }), {
+    }, {
       status: 500,
-      headers: {
-        'Content-Type': 'application/json',
-      },
     });
   }
 }
@@ -68,67 +67,17 @@ export async function PATCH(
     const data = await response.json();
     
     // Return the response with appropriate headers
-    return new Response(JSON.stringify(data), {
+    return NextResponse.json(data, {
       status: response.status,
-      headers: {
-        'Content-Type': 'application/json',
-      },
     });
   } catch (error) {
     console.error('Error in material PATCH API proxy:', error);
-    return new Response(JSON.stringify({
+    return NextResponse.json({
       code: 500,
       status: 'INTERNAL_SERVER_ERROR',
       error: 'An error occurred while processing your request'
-    }), {
+    }, {
       status: 500,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-  }
-}
-
-export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
-  try {
-    // Get the material ID from params
-    const materialId = params.id;
-    
-    // Get the authorization header from the incoming request
-    const authHeader = request.headers.get('Authorization');
-    
-    // Forward the request to the actual API
-    const response = await fetch(`http://54.153.132.144:8080/api/v1/materials/${materialId}`, {
-      method: 'DELETE',
-      headers: {
-        ...(authHeader ? { 'Authorization': authHeader } : {})
-      },
-    });
-    
-    // Get the response data
-    const data = await response.json();
-    
-    // Return the response with appropriate headers
-    return new Response(JSON.stringify(data), {
-      status: response.status,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-  } catch (error) {
-    console.error('Error in material DELETE API proxy:', error);
-    return new Response(JSON.stringify({
-      code: 500,
-      status: 'INTERNAL_SERVER_ERROR',
-      error: 'An error occurred while processing your request'
-    }), {
-      status: 500,
-      headers: {
-        'Content-Type': 'application/json',
-      },
     });
   }
 }
