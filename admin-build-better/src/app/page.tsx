@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
 import Button from '@/components/Button';
-import { H1, H2, Body, Caption, Text } from '@/components/Typography';
+import { H1, Body, Caption } from '@/components/Typography';
 
 export default function Login() {
   const [email, setEmail] = useState('');

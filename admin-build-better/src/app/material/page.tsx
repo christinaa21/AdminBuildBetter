@@ -30,7 +30,6 @@ interface MaterialCategory {
 const Material: React.FC = () => {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
-  const modalRef = useRef<HTMLDivElement>(null);
   const [materialCategories, setMaterialCategories] = useState<MaterialCategory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

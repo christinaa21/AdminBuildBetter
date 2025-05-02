@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { FaArrowLeft } from 'react-icons/fa';
 import { H2 } from '@/components/Typography';
@@ -92,9 +92,9 @@ const EditMaterialPage: React.FC = () => {
         } else {
             setAvailableSubCategories([]);
         }
-    }, [materialData.category]);
+    }, [materialData.category, materialData.subCategory]);
 
-    const fetchMaterialData = async (id: string) => {
+    const fetchMaterialData = useCallback(async (id: string) => {
         setIsLoading(true);
         setApiError(null);
 
@@ -141,7 +141,7 @@ const EditMaterialPage: React.FC = () => {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [router]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>): void => {
         const { name, value } = e.target;

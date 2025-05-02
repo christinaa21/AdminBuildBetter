@@ -1,6 +1,6 @@
 import React from 'react';
 import Image from 'next/image';
-import { FaPencilAlt, FaTrash } from 'react-icons/fa';
+import { FaPencilAlt } from 'react-icons/fa';
 import { Body } from './Typography';
 
 interface Material {

@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import NavigationBar from '@/components/NavigationBar';
 import HouseCard from '@/components/HouseCard';
 import { FaSearch, FaPlus, FaTimes } from 'react-icons/fa';
-import { Body, Caption, H2, H3, Title } from '@/components/Typography';
+import { Caption, H3, Title } from '@/components/Typography';
 import Button from '@/components/Button';
 
 interface House {

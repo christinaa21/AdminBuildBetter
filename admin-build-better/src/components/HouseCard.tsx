@@ -1,9 +1,8 @@
 import React from 'react';
-import Link from 'next/link';
 import Image from 'next/image';
 import { BiArea } from 'react-icons/bi';
 import { FaHome, FaBed, FaLayerGroup, FaPencilAlt, FaTrash } from 'react-icons/fa';
-import { H2, Title, Body, Caption } from './Typography';
+import { Title, Caption } from './Typography';
 
 interface House {
   id: string;
