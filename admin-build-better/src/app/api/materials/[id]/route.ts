@@ -1,14 +1,20 @@
 // File: app/api/materials/[id]/route.ts
-// For handling PATCH, GET operations on specific material IDs
+// For handling PATCH, GET, DELETE operations on specific material IDs
 import { NextRequest, NextResponse } from 'next/server';
+
+type Params = {
+  params: {
+    id: string
+  }
+}
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: Params
 ) {
   try {
     // Get the material ID from params
-    const materialId = params.id;
+    const materialId = context.params.id;
     
     // Get the authorization header from the incoming request
     const authHeader = request.headers.get('Authorization');
@@ -42,11 +48,11 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: Params
 ) {
   try {
     // Get the material ID from params
-    const materialId = params.id;
+    const materialId = context.params.id;
     
     // Get the authorization header from the incoming request
     const authHeader = request.headers.get('Authorization');
