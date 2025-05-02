@@ -1,20 +1,14 @@
 // File: app/api/materials/[id]/route.ts
 // For handling PATCH, GET, DELETE operations on specific material IDs
-import { NextRequest, NextResponse } from 'next/server';
-
-type Params = {
-  params: {
-    id: string
-  }
-}
+import { NextRequest } from 'next/server';
 
 export async function GET(
-  request: NextRequest,
-  context: Params
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Get the material ID from params
-    const materialId = context.params.id;
+    const { id: materialId } = await params;
     
     // Get the authorization header from the incoming request
     const authHeader = request.headers.get('Authorization');
@@ -31,28 +25,34 @@ export async function GET(
     const data = await response.json();
     
     // Return the response with appropriate headers
-    return NextResponse.json(data, {
+    return new Response(JSON.stringify(data), {
       status: response.status,
+      headers: {
+        'Content-Type': 'application/json',
+      },
     });
   } catch (error) {
     console.error('Error in material GET by ID API proxy:', error);
-    return NextResponse.json({
+    return new Response(JSON.stringify({
       code: 500,
       status: 'INTERNAL_SERVER_ERROR',
       error: 'An error occurred while processing your request'
-    }, {
+    }), {
       status: 500,
+      headers: {
+        'Content-Type': 'application/json',
+      },
     });
   }
 }
 
 export async function PATCH(
   request: NextRequest,
-  context: Params
+  { params }: { params: { id: string } }
 ) {
   try {
     // Get the material ID from params
-    const materialId = context.params.id;
+    const materialId = params.id;
     
     // Get the authorization header from the incoming request
     const authHeader = request.headers.get('Authorization');
@@ -73,17 +73,23 @@ export async function PATCH(
     const data = await response.json();
     
     // Return the response with appropriate headers
-    return NextResponse.json(data, {
+    return new Response(JSON.stringify(data), {
       status: response.status,
+      headers: {
+        'Content-Type': 'application/json',
+      },
     });
   } catch (error) {
     console.error('Error in material PATCH API proxy:', error);
-    return NextResponse.json({
+    return new Response(JSON.stringify({
       code: 500,
       status: 'INTERNAL_SERVER_ERROR',
       error: 'An error occurred while processing your request'
-    }, {
+    }), {
       status: 500,
+      headers: {
+        'Content-Type': 'application/json',
+      },
     });
   }
 }
