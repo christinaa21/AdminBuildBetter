@@ -3,28 +3,23 @@
 import { NextRequest } from 'next/server';
 
 export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  context: { params: { id: string } }
 ) {
   try {
-    // Get the material ID from params
-    const materialId = params.id;
-    
-    // Get the authorization header from the incoming request
+    const materialId = context.params.id;
+
     const authHeader = request.headers.get('Authorization');
-    
-    // Forward the request to the actual API
+
     const response = await fetch(`http://54.153.132.144:8080/api/v1/materials/${materialId}`, {
       method: 'GET',
       headers: {
         ...(authHeader ? { 'Authorization': authHeader } : {})
       },
     });
-    
-    // Get the response data
+
     const data = await response.json();
-    
-    // Return the response with appropriate headers
+
     return new Response(JSON.stringify(data), {
       status: response.status,
       headers: {
