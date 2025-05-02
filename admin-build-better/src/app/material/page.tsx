@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import NavigationBar from '@/components/NavigationBar';
 import MaterialCard from '@/components/MaterialCard';
 import { FaSearch, FaPlus } from 'react-icons/fa';
@@ -34,19 +34,7 @@ const Material: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
-  // Check for authentication on component mount
-  useEffect(() => {
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-      // Redirect to login if no token is found
-      router.push('/login');
-      return;
-    }
-    
-    fetchMaterials();
-  }, [router]);
-
-  const fetchMaterials = async () => {
+  const fetchMaterials = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     
@@ -79,7 +67,19 @@ const Material: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [router]);
+
+  // Check for authentication on component mount
+  useEffect(() => {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      // Redirect to login if no token is found
+      router.push('/login');
+      return;
+    }
+    
+    fetchMaterials();
+  }, [router, fetchMaterials]);
 
   const handleEdit = (id: string) => {
     console.log(`Edit material with id: ${id}`);

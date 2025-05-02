@@ -7,6 +7,7 @@ import { H2 } from '@/components/Typography';
 import Button from '@/components/Button';
 import NavigationBar from '@/components/NavigationBar';
 import { useParams, useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 interface MaterialData {
     id: string;
@@ -62,38 +63,7 @@ const EditMaterialPage: React.FC = () => {
             router.push('/login');
         }
     }, [router]);
-
-    // Fetch material data when component mounts
-    useEffect(() => {
-        if (materialId) {
-            fetchMaterialData(materialId);
-        } else {
-            setApiError('Material ID is required');
-            setTimeout(() => {
-                router.push('/material');
-            }, 3000);
-        }
-    }, [materialId, router]);
-
-    // Update subcategories when category changes
-    useEffect(() => {
-        if (materialData.category) {
-            const categoryData = materialCategory.find(item => item.category === materialData.category);
-            if (categoryData) {
-                setAvailableSubCategories(categoryData.subCategory);
-                // Reset subcategory if current value isn't in the new list
-                if (!categoryData.subCategory.includes(materialData.subCategory)) {
-                    setMaterialData(prev => ({
-                        ...prev,
-                        subCategory: '',
-                    }));
-                }
-            }
-        } else {
-            setAvailableSubCategories([]);
-        }
-    }, [materialData.category, materialData.subCategory]);
-
+    
     const fetchMaterialData = useCallback(async (id: string) => {
         setIsLoading(true);
         setApiError(null);
@@ -143,6 +113,37 @@ const EditMaterialPage: React.FC = () => {
         }
     }, [router]);
 
+    // Fetch material data when component mounts
+    useEffect(() => {
+        if (materialId) {
+            fetchMaterialData(materialId);
+        } else {
+            setApiError('Material ID is required');
+            setTimeout(() => {
+                router.push('/material');
+            }, 3000);
+        }
+    }, [materialId, router, fetchMaterialData]);
+
+    // Update subcategories when category changes
+    useEffect(() => {
+        if (materialData.category) {
+            const categoryData = materialCategory.find(item => item.category === materialData.category);
+            if (categoryData) {
+                setAvailableSubCategories(categoryData.subCategory);
+                // Reset subcategory if current value isn't in the new list
+                if (!categoryData.subCategory.includes(materialData.subCategory)) {
+                    setMaterialData(prev => ({
+                        ...prev,
+                        subCategory: '',
+                    }));
+                }
+            }
+        } else {
+            setAvailableSubCategories([]);
+        }
+    }, [materialData.category, materialData.subCategory]);
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>): void => {
         const { name, value } = e.target;
 
@@ -190,24 +191,6 @@ const EditMaterialPage: React.FC = () => {
         }
     };
 
-    // Helper function to capitalize each word
-    const capitalizeEachWord = (str: string): string => {
-        return str
-            .split(' ')
-            .map(word => {
-                // Handle hyphenated words
-                if (word.includes('-')) {
-                    return word
-                        .split('-')
-                        .map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
-                        .join('-');
-                }
-                // Handle regular words
-                return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
-            })
-            .join(' ');
-    };
-
     const validateForm = (): boolean => {
         const newErrors: FormErrors = {};
         
@@ -244,9 +227,9 @@ const EditMaterialPage: React.FC = () => {
         const formData = new FormData();
 
         // Add string data with capitalization
-        formData.append('name', capitalizeEachWord(materialData.name));
-        formData.append('category', capitalizeEachWord(materialData.category));
-        formData.append('subCategory', capitalizeEachWord(materialData.subCategory));
+        formData.append('name', (materialData.name));
+        formData.append('category', (materialData.category));
+        formData.append('subCategory', (materialData.subCategory));
         
         // Add image file only if it was changed
         if (imageChanged && materialData.image) {
@@ -370,11 +353,13 @@ const EditMaterialPage: React.FC = () => {
                         <label className="block text-custom-green-400 mb-2">
                             Gambar Saat Ini
                         </label>
-                        <div className="relative border border-gray-200 rounded-md p-2">
-                            <img 
-                                src={materialData.imageUrl} 
-                                alt={materialData.name} 
-                                className="w-full max-h-48 object-contain rounded-md"
+                        <div className="flex relative border border-gray-200 rounded-md p-2 justify-center">
+                            <Image
+                                src={materialData.imageUrl || '/blank.png'}
+                                alt={materialData.name}
+                                width={200}
+                                height={300}
+                                className="object-cover rounded-md"
                             />
                         </div>
                     </div>

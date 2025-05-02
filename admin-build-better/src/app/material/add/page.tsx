@@ -71,7 +71,7 @@ const AddMaterialPage: React.FC = () => {
         } else {
             setAvailableSubCategories([]);
         }
-    }, [materialData.category]);
+    }, [materialData.category, materialData.subCategory]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>): void => {
         const { name, value } = e.target;
@@ -143,24 +143,6 @@ const AddMaterialPage: React.FC = () => {
         return Object.keys(newErrors).length === 0;
     };
 
-    // Helper function to capitalize each word
-    const capitalizeEachWord = (str: string): string => {
-        return str
-            .split(' ')
-            .map(word => {
-                // Handle hyphenated words
-                if (word.includes('-')) {
-                    return word
-                        .split('-')
-                        .map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
-                        .join('-');
-                }
-                // Handle regular words
-                return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
-            })
-            .join(' ');
-    };
-    
     const handleSubmit = async (): Promise<void> => {
         if (!validateForm()) {
             return;
@@ -172,9 +154,9 @@ const AddMaterialPage: React.FC = () => {
         const formData = new FormData();
 
         // Add string data with capitalization
-        formData.append('name', capitalizeEachWord(materialData.name));
-        formData.append('category', capitalizeEachWord(materialData.category));
-        formData.append('subCategory', capitalizeEachWord(materialData.subCategory));
+        formData.append('name', (materialData.name));
+        formData.append('category', (materialData.category));
+        formData.append('subCategory', (materialData.subCategory));
         
         // Add image file
         if (materialData.image) {
