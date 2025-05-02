@@ -3,29 +3,252 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { FaArrowLeft } from 'react-icons/fa';
-import { H2, Subtitle } from '@/components/Typography';
+import { H2 } from '@/components/Typography';
 import Button from '@/components/Button';
 import ProgressSteps from '@/components/ProgressSteps';
 import NavigationBar from '@/components/NavigationBar';
 
-const AddHousePage = () => {
-  const [currentStep] = useState(0);
-  const steps = ['Informasi Dasar', 'Detail Rumah', 'Foto & Gambar', 'Konfirmasi'];
+// Step components
+import Step1General from './steps/Step1General';
+import Step2Ekonomis from './steps/Step2Ekonomis';
+import Step3Original from './steps/Step3Original';
+import Step4Premium from './steps/Step4Premium';
 
-  // Form state
-  const [formData, setFormData] = useState({
+// Define the comprehensive form data interface that includes all fields from all steps
+interface FormData {
+  // Step 1: General
+  architectName: string;
+  landArea: string;
+  designStyle: string;
+  floors: string;
+  rooms: string;
+  houseDesignFile: File | null;
+  floorPlanFile: File | null;
+  frontDesignFile: File | null;
+  sideDesignFile: File | null;
+  backDesignFile: File | null;
+  floorPlan2File: File | null;
+  
+  // Step 2: Ekonomis
+  budgetPerMeter?: string;
+  roofType?: string;
+  roofStructure?: string;
+  ceiling?: string;
+  wallCovering?: string;
+  wallStructure?: string;
+  floorCovering?: string;
+  doorType?: string;
+  windowGlass?: string;
+  windowFrame?: string;
+  foundationType?: string;
+  foundationMaterial?: string;
+  structureMaterial?: string;
+  
+  // Step 3: Original
+  originalBudgetPerMeter?: string;
+  originalRoofType?: string;
+  originalRoofStructure?: string;
+  originalCeiling?: string;
+  originalWallCovering?: string;
+  originalWallStructure?: string;
+  originalFloorCovering?: string;
+  originalDoorType?: string;
+  originalWindowGlass?: string;
+  originalWindowFrame?: string;
+  originalFoundationType?: string;
+  originalFoundationMaterial?: string;
+  originalStructureMaterial?: string;
+  
+  // Step 4: Premium
+  premiumBudgetPerMeter?: string;
+  premiumRoofType?: string;
+  premiumRoofStructure?: string;
+  premiumCeiling?: string;
+  premiumWallCovering?: string;
+  premiumWallStructure?: string;
+  premiumFloorCovering?: string;
+  premiumDoorType?: string;
+  premiumWindowGlass?: string;
+  premiumWindowFrame?: string;
+  premiumFoundationType?: string;
+  premiumFoundationMaterial?: string;
+  premiumStructureMaterial?: string;
+}
+
+const AddHousePage: React.FC = () => {
+  const [currentStep, setCurrentStep] = useState<number>(0);
+  const steps = ['Informasi Dasar', 'Material Ekonomis', 'Material Original', 'Material Premium'];
+
+  // Main form state - all fields from all steps
+  const [formData, setFormData] = useState<FormData>({
+    // Step 1: General
     architectName: '',
     landArea: '',
     designStyle: '',
     floors: '',
     rooms: '',
+    houseDesignFile: null,
+    floorPlanFile: null,
+    frontDesignFile: null,
+    sideDesignFile: null,
+    backDesignFile: null,
+    floorPlan2File: null,
+    
+    // Step 2: Ekonomis (other fields will have undefined values by default)
+    budgetPerMeter: '',
+    roofType: '',
+    roofStructure: '',
+    ceiling: '',
+    wallCovering: '',
+    wallStructure: '',
+    floorCovering: '',
+    doorType: '',
+    windowGlass: '',
+    windowFrame: '',
+    foundationType: '',
+    foundationMaterial: '',
+    structureMaterial: '',
+    
+    // Step 3: Original
+    originalBudgetPerMeter: '',
+    originalRoofType: '',
+    originalRoofStructure: '',
+    originalCeiling: '',
+    originalWallCovering: '',
+    originalWallStructure: '',
+    originalFloorCovering: '',
+    originalDoorType: '',
+    originalWindowGlass: '',
+    originalWindowFrame: '',
+    originalFoundationType: '',
+    originalFoundationMaterial: '',
+    originalStructureMaterial: '',
+    
+    // Step 4: Premium
+    premiumBudgetPerMeter: '',
+    premiumRoofType: '',
+    premiumRoofStructure: '',
+    premiumCeiling: '',
+    premiumWallCovering: '',
+    premiumWallStructure: '',
+    premiumFloorCovering: '',
+    premiumDoorType: '',
+    premiumWindowGlass: '',
+    premiumWindowFrame: '',
+    premiumFoundationType: '',
+    premiumFoundationMaterial: '',
+    premiumStructureMaterial: ''
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  // Handle form field changes for any step
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>): void => {
+    const { name, value } = e.target;
+    
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+      [name]: value,
     });
+  };
+
+  // Function to handle file uploads
+  const handleFileChange = (fieldName: string, files: FileList | null): void => {
+    if (!files || files.length === 0) return;
+    
+    setFormData({
+      ...formData,
+      [fieldName]: files[0], // Only take the first file
+    });
+  };
+
+  // Move to next step
+  const handleNextStep = (): void => {
+    if (currentStep < steps.length - 1) {
+      setCurrentStep(currentStep + 1);
+    } else {
+      handleSubmit();
+    }
+  };
+
+  // Move to previous step
+  const handlePrevStep = (): void => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  // Submit the form data to your backend
+  const handleSubmit = async (): Promise<void> => {
+    // Create FormData for API submission
+    const data = new FormData();
+    
+    // Append all text fields
+    Object.entries(formData).forEach(([key, value]) => {
+      if (typeof value === 'string') {
+        data.append(key, value);
+      }
+    });
+    
+    // Append file fields
+    if (formData.houseDesignFile) data.append('houseDesignFile', formData.houseDesignFile);
+    if (formData.floorPlanFile) data.append('floorPlanFile', formData.floorPlanFile);
+    if (formData.frontDesignFile) data.append('frontDesignFile', formData.frontDesignFile);
+    if (formData.sideDesignFile) data.append('sideDesignFile', formData.sideDesignFile);
+    if (formData.backDesignFile) data.append('backDesignFile', formData.backDesignFile);
+    if (formData.floorPlan2File) data.append('floorPlan2File', formData.floorPlan2File);
+    
+    try {
+      // Replace with your API endpoint
+      const response = await fetch('/api/houses', {
+        method: 'POST',
+        body: data,
+      });
+      
+      if (response.ok) {
+        // Redirect on success
+        window.location.href = '/rumah';
+      } else {
+        console.error('Failed to submit form');
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error);
+    }
+  };
+
+  // Render the current step
+  const renderStep = (): React.ReactNode => {
+    switch (currentStep) {
+      case 0:
+        return (
+          <Step1General 
+            formData={formData} 
+            handleChange={handleChange}
+            handleFileChange={handleFileChange}
+          />
+        );
+      case 1:
+        return (
+          <Step2Ekonomis 
+            formData={formData} 
+            handleChange={handleChange} 
+          />
+        );
+      case 2:
+        return (
+          <Step3Original 
+            formData={formData} 
+            handleChange={handleChange} 
+          />
+        );
+      case 3:
+        return (
+          <Step4Premium 
+            formData={formData} 
+            handleChange={handleChange} 
+          />
+        );
+      default:
+        return null;
+    }
   };
 
   return (
@@ -35,9 +258,18 @@ const AddHousePage = () => {
       <div className="container mx-auto px-4 py-6 flex-1">
         <div className="max-w-3xl mx-auto">
           {/* Back button */}
-          <Link href="/rumah" className="inline-flex items-center text-custom-green-300 mb-6">
-            <FaArrowLeft className="w-5 h-5 mr-2" />
-          </Link>
+          {currentStep === 0 ? (
+            <Link href="/rumah" className="inline-flex items-center text-custom-green-300 mb-6">
+              <FaArrowLeft className="w-5 h-5 mr-2" />
+            </Link>
+          ) : (
+            <button 
+              onClick={handlePrevStep}
+              className="inline-flex items-center text-custom-green-300 mb-6"
+            >
+              <FaArrowLeft className="w-5 h-5 mr-2" />
+            </button>
+          )}
           
           {/* Page title */}
           <H2 className="text-custom-green-500 mb-8">Tambah Rumah</H2>
@@ -50,121 +282,16 @@ const AddHousePage = () => {
           
           {/* Form */}
           <div className="mt-8">
-            <Subtitle className="font-medium text-custom-green-500 mb-4">Unggah Desain</Subtitle>
+            {renderStep()}
             
-            {/* House Design Upload */}
-            <div className="mb-6">
-              <Subtitle className="text-custom-green-400 mb-1">Desain Rumah (3 Perspektif)</Subtitle>
-              <button className="w-full flex items-center justify-between border border-custom-green-300 rounded-md px-4 py-3 text-custom-green-300">
-                <span>Unggah disini</span>
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="feather feather-download">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                  <polyline points="7 10 12 15 17 10"></polyline>
-                  <line x1="12" y1="15" x2="12" y2="3"></line>
-                </svg>
-              </button>
-            </div>
-            
-            {/* Floor Plan Upload */}
-            <div className="mb-6">
-              <Subtitle className="text-custom-green-400 mb-1">Denah Rumah</Subtitle>
-              <button className="w-full flex items-center justify-between border border-custom-green-300 rounded-md px-4 py-3 text-custom-green-300">
-                <span>Unggah disini</span>
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="feather feather-download">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                  <polyline points="7 10 12 15 17 10"></polyline>
-                  <line x1="12" y1="15" x2="12" y2="3"></line>
-                </svg>
-              </button>
-            </div>
-            
-            {/* Architect Name */}
-            <div className="mb-6">
-              <Subtitle className="text-custom-green-400 mb-1">Nama Arsitek</Subtitle>
-              <input
-                type="text"
-                name="architectName"
-                value={formData.architectName}
-                onChange={handleChange}
-                placeholder="Tulis disini"
-                className="w-full border border-custom-gray-50 rounded-md px-4 py-3 focus:outline-none focus:ring-1 focus:ring-custom-green-300"
-              />
-            </div>
-            
-            <Subtitle className="font-medium text-custom-green-500 mb-4 mt-8">Preferensi Desain</Subtitle>
-            
-            {/* Land Area */}
-            <div className="mb-6">
-              <Subtitle className="text-custom-green-400 mb-1">Luas Lahan (m2)</Subtitle>
-              <input
-                type="text"
-                name="landArea"
-                value={formData.landArea}
-                onChange={handleChange}
-                placeholder="Tulis disini"
-                className="w-full border border-custom-gray-50 rounded-md px-4 py-3 focus:outline-none focus:ring-1 focus:ring-custom-green-300"
-              />
-            </div>
-            
-            {/* Design Style */}
-            <div className="mb-6">
-              <Subtitle className="text-custom-green-400 mb-1">Gaya Desain</Subtitle>
-              <select
-                name="designStyle"
-                value={formData.designStyle}
-                onChange={handleChange}
-                className="w-full border border-custom-gray-50 rounded-md px-4 py-3 focus:outline-none focus:ring-1 focus:ring-custom-green-300 appearance-none bg-white"
-              >
-                <option value="" disabled>Pilih disini</option>
-                <option value="modern">Modern</option>
-                <option value="minimalis">Minimalis</option>
-                <option value="industrial">Industrial</option>
-                <option value="classic">Classic</option>
-              </select>
-            </div>
-            
-            {/* Number of Floors */}
-            <div className="mb-6">
-              <Subtitle className="text-custom-green-400 mb-1">Jumlah Lantai</Subtitle>
-              <select
-                name="floors"
-                value={formData.floors}
-                onChange={handleChange}
-                className="w-full border border-custom-gray-50 rounded-md px-4 py-3 focus:outline-none focus:ring-1 focus:ring-custom-green-300 appearance-none bg-white"
-              >
-                <option value="" disabled>Pilih disini</option>
-                <option value="1">1</option>
-                <option value="2">2</option>
-                <option value="3">3</option>
-                <option value="4+">4+</option>
-              </select>
-            </div>
-            
-            {/* Number of Rooms */}
-            <div className="mb-8">
-              <Subtitle className="text-custom-green-400 mb-1">Jumlah Kamar</Subtitle>
-              <select
-                name="rooms"
-                value={formData.rooms}
-                onChange={handleChange}
-                className="w-full border border-custom-gray-50 rounded-md px-4 py-3 focus:outline-none focus:ring-1 focus:ring-custom-green-300 appearance-none bg-white"
-              >
-                <option value="" disabled>Pilih disini</option>
-                <option value="1">1</option>
-                <option value="2">2</option>
-                <option value="3">3</option>
-                <option value="4">4</option>
-                <option value="5+">5+</option>
-              </select>
-            </div>
-            
-            {/* Next Button */}
-            <div className="flex justify-center">
+            {/* Navigation buttons */}
+            <div className="flex justify-center mt-8">
               <Button 
-                title="Selanjutnya" 
+                title={currentStep === steps.length - 1 ? "Simpan" : "Selanjutnya"} 
                 variant="primary"
                 fullWidth
                 className="py-3"
+                onClick={handleNextStep}
               />
             </div>
           </div>

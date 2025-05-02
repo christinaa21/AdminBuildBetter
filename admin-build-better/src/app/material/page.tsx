@@ -1,217 +1,154 @@
 'use client'
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import NavigationBar from '@/components/NavigationBar';
 import MaterialCard from '@/components/MaterialCard';
 import { FaSearch, FaPlus } from 'react-icons/fa';
 import { H3, Title } from '@/components/Typography';
 import Button from '@/components/Button';
+import { useRouter } from 'next/navigation';
 
 interface Material {
   id: string;
   name: string;
   imageUrl: string;
   category: string;
-  subcategory?: string;
+  subCategory?: string;
+  image?: string;
 }
 
 interface MaterialSubCategory {
-  name: string;
+  subCategory: string;
   materials: Material[];
 }
 
 interface MaterialCategory {
-  title: string;
-  subcategories: MaterialSubCategory[];
+  category: string;
+  subCategories: MaterialSubCategory[];
 }
 
 const Material: React.FC = () => {
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   const modalRef = useRef<HTMLDivElement>(null);
+  const [materialCategories, setMaterialCategories] = useState<MaterialCategory[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
-  const [materialCategories, setMaterialCategories] = useState<MaterialCategory[]>([
-    {
-      title: "Atap",
-      subcategories: [
-        {
-          name: "Atap",
-          materials: [
-            {
-              id: '1',
-              name: 'Genting',
-              imageUrl: '/Genting.png',
-              category: 'atap'
-            },
-            {
-              id: '2',
-              name: 'Bitumen',
-              imageUrl: '/Bitumen.png',
-              category: 'atap'
-            },
-            {
-              id: '3',
-              name: 'Metal',
-              imageUrl: '/Metal.png',
-              category: 'atap'
-            },
-            {
-              id: '4',
-              name: 'Dak Beton',
-              imageUrl: '/DakBeton.png',
-              category: 'atap'
-            }
-          ]
-        },
-        {
-          name: "Struktur Atap",
-          materials: [
-            {
-              id: '5',
-              name: 'Baja Ringan',
-              imageUrl: '/BajaRingan.png',
-              category: 'struktur_atap'
-            },
-            {
-              id: '6',
-              name: 'Kayu',
-              imageUrl: '/Kayu.png',
-              category: 'struktur_atap'
-            },
-            {
-              id: '7',
-              name: 'Dak Beton',
-              imageUrl: '/DakBetonStruktur.png',
-              category: 'struktur_atap'
-            }
-          ]
-        },
-        {
-          name: "Plafon",
-          materials: [
-            {
-              id: '8',
-              name: 'PVC',
-              imageUrl: '/PVC.png',
-              category: 'plafon'
-            },
-            {
-              id: '9',
-              name: 'Kayu',
-              imageUrl: '/KayuPlafon.png',
-              category: 'plafon'
-            },
-            {
-              id: '10',
-              name: 'Gipsum',
-              imageUrl: '/Gipsum.png',
-              category: 'plafon'
-            },
-            {
-              id: '11',
-              name: 'Multiplek',
-              imageUrl: '/Multiplek.png',
-              category: 'plafon'
-            }
-          ]
-        }
-      ]
-    },
-    {
-      title: "Dinding",
-      subcategories: [
-        {
-          name: "Pelapis Dinding",
-          materials: [
-            {
-              id: '12',
-              name: 'Wallpaper',
-              imageUrl: '/Wallpaper.png',
-              category: 'pelapis_dinding'
-            },
-            {
-              id: '13',
-              name: 'Vinyl',
-              imageUrl: '/Vinyl.png',
-              category: 'pelapis_dinding'
-            },
-            {
-              id: '14',
-              name: 'Cat',
-              imageUrl: '/Cat.png',
-              category: 'pelapis_dinding'
-            },
-            {
-              id: '15',
-              name: 'Kamprot',
-              imageUrl: '/Kamprot.png',
-              category: 'pelapis_dinding'
-            },
-            {
-              id: '16',
-              name: 'Keramik',
-              imageUrl: '/KeramikDinding.png',
-              category: 'pelapis_dinding'
-            }
-          ]
-        },
-        {
-          name: "Struktur Dinding",
-          materials: [
-            {
-              id: '21',
-              name: 'Bata',
-              imageUrl: '/Bata.png',
-              category: 'struktur_dinding'
-            },
-            {
-              id: '22',
-              name: 'Batako',
-              imageUrl: '/Batako.png',
-              category: 'struktur_dinding'
-            }
-          ]
-        }
-      ]
-    },
-    {
-      title: "Lantai",
-      subcategories: [
-        {
-          name: "Pelapis",
-          materials: [
-            {
-              id: '23',
-              name: 'Keramik',
-              imageUrl: '/KeramikLantai.png',
-              category: 'pelapis_lantai'
-            },
-            {
-              id: '24',
-              name: 'Granit',
-              imageUrl: '/GranitLantai.png',
-              category: 'pelapis_lantai'
-            },
-            {
-              id: '25',
-              name: 'Parquet',
-              imageUrl: '/Parquet.png',
-              category: 'pelapis_lantai'
-            }
-          ]
-        }
-      ]
+  // Check for authentication on component mount
+  useEffect(() => {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      // Redirect to login if no token is found
+      router.push('/login');
+      return;
     }
-  ]);
+    
+    fetchMaterials();
+  }, [router]);
+
+  const fetchMaterials = async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const token = localStorage.getItem('authToken');
+      
+      // Use Next.js API route as a proxy to avoid CORS issues
+      const response = await fetch('/api/materials?grouped=true', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      const result = await response.json();
+      
+      if (response.ok && result.code === 200) {
+        // Process and store the material data
+        setMaterialCategories(result.data);
+      } else if (response.status === 401 || response.status === 403) {
+        // Handle unauthorized access
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userData');
+        router.push('/login');
+      } else {
+        setError('Failed to load materials. Please try again later.');
+      }
+    } catch (error) {
+      console.error('Error fetching materials:', error);
+      setError('An error occurred while fetching materials. Please try again later.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleEdit = (id: string) => {
     console.log(`Edit material with id: ${id}`);
-    // Navigate to edit page or open edit modal
+    // Navigate to edit page with material ID
+    router.push(`/material/edit/${id}`);
   };
 
   const handleAddMaterial = () => {
     console.log('Add new material');
-    window.location.href = "/material/add";
+    router.push("/material/add");
   };
+
+  // Filter materials based on search term
+  const filteredMaterialCategories = materialCategories.map(category => {
+    // Filter subcategories containing materials that match the search term
+    const filteredSubCategories = category.subCategories
+      .map(subcategory => {
+        // Filter materials in each subcategory
+        const filteredMaterials = subcategory.materials.filter(material =>
+          material.name.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+        
+        // Return subcategory with filtered materials
+        return {
+          ...subcategory,
+          materials: filteredMaterials
+        };
+      })
+      // Only include subcategories that have materials after filtering
+      .filter(subcategory => subcategory.materials.length > 0);
+    
+    // Return category with filtered subcategories
+    return {
+      ...category,
+      subCategories: filteredSubCategories
+    };
+  }).filter(category => category.subCategories.length > 0);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen">
+        <NavigationBar />
+        <div className="container mx-auto py-8 px-8 flex justify-center items-center">
+          <div className="text-center">
+            <p className="text-custom-olive-50 text-lg">Loading materials...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen">
+        <NavigationBar />
+        <div className="container mx-auto py-8 px-8">
+          <div className="text-center">
+            <p className="text-red-500 mb-4">{error}</p>
+            <Button
+              title='Try Again'
+              variant='primary'
+              onPress={fetchMaterials}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen">
@@ -244,26 +181,39 @@ const Material: React.FC = () => {
         </div>
         
         {/* Material Categories */}
-        {materialCategories.map((category, index) => (
-          <div key={index} className="mb-12">
-            <Title className="text-custom-olive-50 mb-4">Material - {category.title}</Title>
-            
-            {category.subcategories.map((subcategory, subIndex) => (
-              <div key={subIndex} className="mb-8">
-                <div className="text-custom-olive-50 mb-2">{subcategory.name}</div>
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
-                  {subcategory.materials.map((material) => (
+        {filteredMaterialCategories.length > 0 ? (
+          filteredMaterialCategories.map((category, index) => (
+            <div key={index} className="mb-12">
+              <Title className="text-custom-olive-50 mb-4">Material - {category.category}</Title>
+              
+              {category.subCategories.map((subcategory, subIndex) => (
+                <div key={subIndex} className="mb-8">
+                  <div className="text-custom-olive-50 mb-2">{subcategory.subCategory}</div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+                    {subcategory.materials.map((material) => (
                       <MaterialCard 
                         key={material.id}
-                        material={material}
+                        material={{
+                          id: material.id,
+                          name: material.name,
+                          imageUrl: material.image || '', // Use image URL from API
+                          category: material.category
+                        }}
                         onEdit={handleEdit}
                       />
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
+          ))
+        ) : (
+          <div className="text-center py-8">
+            <p className="text-gray-500">
+              {searchTerm ? 'No materials found matching your search.' : 'No materials available.'}
+            </p>
           </div>
-        ))}
+        )}
       </main>
     </div>
   );

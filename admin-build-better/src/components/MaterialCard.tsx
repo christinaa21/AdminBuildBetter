@@ -7,12 +7,12 @@ interface Material {
   id: string;
   name: string;
   imageUrl: string;
-  category?: string;
+  category: string;
 }
 
 interface MaterialCardProps {
   material: Material;
-  onEdit?: (id: string) => void;
+  onEdit: (id: string) => void;
 }
 
 const MaterialCard: React.FC<MaterialCardProps> = ({ material, onEdit }) => {
@@ -26,6 +26,11 @@ const MaterialCard: React.FC<MaterialCardProps> = ({ material, onEdit }) => {
             alt={material.name}
             fill
             className="object-cover"
+            onError={(e) => {
+              // Handle image load errors
+              const target = e.target as HTMLImageElement;
+              target.src = '/blank.png'; // Fallback image
+            }}
           />
         </div>
         
