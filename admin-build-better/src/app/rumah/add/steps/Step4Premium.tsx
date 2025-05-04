@@ -1,288 +1,173 @@
 import React from 'react';
-import { Subtitle } from '@/components/Typography';
 
-interface Step4PremiumProps {
-  formData: {
-    premiumBudgetPerMeter?: string;
-    landArea?: string;
-    premiumRoofType?: string;
-    premiumRoofStructure?: string;
-    premiumCeiling?: string;
-    premiumWallCovering?: string;
-    premiumWallStructure?: string;
-    premiumFloorCovering?: string;
-    premiumDoorType?: string;
-    premiumWindowGlass?: string;
-    premiumWindowFrame?: string;
-    premiumFoundationType?: string;
-    premiumFoundationMaterial?: string;
-    premiumStructureMaterial?: string;
-  };
-  handleChange: (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
+// Define the material interface based on expected API response
+interface Material {
+  id: string;
+  name: string;
+  category: string;
+  subcategory: string;
+  priceRange: string;
+  description?: string;
 }
 
-const Step4Premium: React.FC<Step4PremiumProps> = ({ formData, handleChange }) => {
+// Define the props interface
+interface Step4PremiumProps {
+  formData: {
+    budget2: string;
+    materials2: string[];
+  };
+  handleChange: (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
+  errors: Record<string, string>;
+  setErrors: React.Dispatch<React.SetStateAction<Record<string, string>>>;
+  materials?: Record<string, Material[]>;
+}
+
+// Material categories structure
+const materialCategories = [
+  {category: "Atap", subcategory: "Atap", index: 0},
+  {category: "Atap", subcategory: "Struktur Atap", index: 1},
+  {category: "Atap", subcategory: "Plafon", index: 2},
+  {category: "Dinding", subcategory: "Pelapis Dinding", index: 3},
+  {category: "Dinding", subcategory: "Struktur Dinding", index: 4},
+  {category: "Lantai", subcategory: "Pelapis", index: 5},
+  {category: "Bukaan", subcategory: "Pintu", index: 6},
+  {category: "Bukaan", subcategory: "Daun Jendela", index: 7},
+  {category: "Bukaan", subcategory: "Frame Jendela", index: 8},
+  {category: "Balok-Kolom", subcategory: "Struktur Balok-Kolom", index: 9}
+];
+
+const Step4Premium: React.FC<Step4PremiumProps> = ({ 
+  formData, 
+  handleChange,
+  errors, 
+  setErrors,
+  materials
+}) => {
+  // Validation function
+  const validate = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.budget2) newErrors.budget2 = "Rentang budget premium wajib diisi";
+    
+    // Validate all material selections
+    materialCategories.forEach(item => {
+      if (!formData.materials2[item.index]) {
+        newErrors[`materials2_${item.subcategory.replace(/\s+/g, '')}`] = 
+          `Material ${item.subcategory} wajib dipilih`;
+      }
+    });
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // Get materials for a specific category and subcategory
+  const getMaterialOptions = (category: string, subcategory: string) => {
+    if (!materials) return [];
+    
+    // Find materials that match the category and subcategory
+    const categoryMaterials = materials[category] || [];
+    return categoryMaterials.filter(material => 
+      material.subcategory.toLowerCase() === subcategory.toLowerCase()
+    );
+  };
+
+  // Handle field change and clear associated error
+  const handleFieldChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    handleChange(e);
+    
+    // Clear error for this field if it exists
+    if (e.target.value && e.target.name.startsWith('materials2[')) {
+      const index = e.target.name.match(/\[(\d+)\]/)?.[1];
+      if (index) {
+        const matchingCategory = materialCategories.find(item => item.index === parseInt(index));
+        if (matchingCategory) {
+          const errorKey = `materials2_${matchingCategory.subcategory.replace(/\s+/g, '')}`;
+          if (errors[errorKey]) {
+            const newErrors = {...errors};
+            delete newErrors[errorKey];
+            setErrors(newErrors);
+          }
+        }
+      }
+    } else if (e.target.name === 'budget2' && e.target.value && errors.budget2) {
+      const newErrors = {...errors};
+      delete newErrors.budget2;
+      setErrors(newErrors);
+    }
+  };
+
   return (
-    <>
-      <Subtitle className="font-medium text-custom-green-500 mb-4">Rentang Budget</Subtitle>
+    <div className="mb-8">
+      <h2 className="text-lg font-medium text-custom-green-500 mb-6">Rentang Budget Premium</h2>
       
-      {/* Budget Range */}
+      {/* Rentang Budget Premium */}
       <div className="mb-6">
-        <Subtitle className="text-custom-green-400 mb-1">Premium (per m2)</Subtitle>
+        <label className="block text-custom-green-400 mb-2">
+          Premium (per m2)
+          {errors.budget2 && <span className="text-red-500 text-sm ml-2">*{errors.budget2}</span>}
+        </label>
         <input
           type="text"
-          name="premiumBudgetPerMeter"
-          value={formData.premiumBudgetPerMeter || ''}
-          onChange={handleChange}
-          placeholder="Tulis disini"
-          className="w-full border border-custom-gray-50 rounded-md px-4 py-3 focus:outline-none focus:ring-1 focus:ring-custom-green-300"
+          name="budget2"
+          value={formData.budget2}
+          onChange={handleFieldChange}
+          placeholder="Tulis disini. Contoh format penulisan: 3000000 - 5000000"
+          className={`w-full border ${errors.budget2 ? 'border-red-500' : 'border-gray-200'} rounded-md px-4 py-3 focus:outline-none focus:ring-1 focus:ring-custom-green-300`}
         />
       </div>
       
-      {/* Budget Estimation */}
-      <div className="mb-8">
-        <Subtitle className="text-custom-green-400 mb-1">Estimasi Rentang Budget Total:</Subtitle>
-        <div className="text-custom-green-500 font-medium">
-          {formData.premiumBudgetPerMeter && formData.landArea 
-            ? `Rp ${(parseInt(formData.premiumBudgetPerMeter) * parseInt(formData.landArea)).toLocaleString('id-ID')}`
-            : 'Rp 0'}
-        </div>
-      </div>
-
-      <Subtitle className="font-medium text-custom-green-500 mb-4">Material Premium</Subtitle>
-      
-      {/* Roof Material */}
-      <div className="mb-1">
-        <Subtitle className="text-custom-green-500 mb-2">Material - Atap</Subtitle>
-      </div>
-      
-      {/* Roof Type */}
-      <div className="mb-4">
-        <Subtitle className="text-custom-green-400 mb-1">Atap</Subtitle>
-        <select
-          name="premiumRoofType"
-          value={formData.premiumRoofType || ''}
-          onChange={handleChange}
-          className="w-full border border-custom-gray-50 rounded-md px-4 py-3 focus:outline-none focus:ring-1 focus:ring-custom-green-300 appearance-none bg-white"
-        >
-          <option value="" disabled>Pilih disini</option>
-          <option value="asbesGelombang">Asbes Gelombang</option>
-          <option value="gentengTanah">Genteng Tanah</option>
-          <option value="gentengMetal">Genteng Metal</option>
-          <option value="gentengBeton">Genteng Beton</option>
-          <option value="spandek">Spandek</option>
-        </select>
-      </div>
-      
-      {/* Roof Structure */}
-      <div className="mb-4">
-        <Subtitle className="text-custom-green-400 mb-1">Struktur Atap</Subtitle>
-        <select
-          name="premiumRoofStructure"
-          value={formData.premiumRoofStructure || ''}
-          onChange={handleChange}
-          className="w-full border border-custom-gray-50 rounded-md px-4 py-3 focus:outline-none focus:ring-1 focus:ring-custom-green-300 appearance-none bg-white"
-        >
-          <option value="" disabled>Pilih disini</option>
-          <option value="galvalume">Galvalume</option>
-          <option value="baja">Baja</option>
-          <option value="kayu">Kayu</option>
-        </select>
-      </div>
-      
-      {/* Ceiling */}
-      <div className="mb-6">
-        <Subtitle className="text-custom-green-400 mb-1">Plafon</Subtitle>
-        <select
-          name="premiumCeiling"
-          value={formData.premiumCeiling || ''}
-          onChange={handleChange}
-          className="w-full border border-custom-gray-50 rounded-md px-4 py-3 focus:outline-none focus:ring-1 focus:ring-custom-green-300 appearance-none bg-white"
-        >
-          <option value="" disabled>Pilih disini</option>
-          <option value="gypsum">Gypsum</option>
-          <option value="pvc">PVC</option>
-          <option value="triplek">Triplek</option>
-          <option value="grc">GRC</option>
-        </select>
-      </div>
-
-      {/* Wall Material */}
-      <div className="mb-1">
-        <Subtitle className="text-custom-green-500 mb-2">Material - Dinding</Subtitle>
-      </div>
-      
-      {/* Wall Finishing */}
-      <div className="mb-4">
-        <Subtitle className="text-custom-green-400 mb-1">Pelapis Dinding</Subtitle>
-        <select
-          name="premiumWallCovering"
-          value={formData.premiumWallCovering || ''}
-          onChange={handleChange}
-          className="w-full border border-custom-gray-50 rounded-md px-4 py-3 focus:outline-none focus:ring-1 focus:ring-custom-green-300 appearance-none bg-white"
-        >
-          <option value="" disabled>Pilih disini</option>
-          <option value="cat">Cat</option>
-          <option value="wallpaper">Wallpaper</option>
-          <option value="keramik">Keramik</option>
-          <option value="batubata">Batu Bata Ekspos</option>
-        </select>
-      </div>
-      
-      {/* Wall Structure */}
-      <div className="mb-6">
-        <Subtitle className="text-custom-green-400 mb-1">Struktur Dinding</Subtitle>
-        <select
-          name="premiumWallStructure"
-          value={formData.premiumWallStructure || ''}
-          onChange={handleChange}
-          className="w-full border border-custom-gray-50 rounded-md px-4 py-3 focus:outline-none focus:ring-1 focus:ring-custom-green-300 appearance-none bg-white"
-        >
-          <option value="" disabled>Pilih disini</option>
-          <option value="batako">Batako</option>
-          <option value="bataBata">Bata Merah</option>
-          <option value="hebel">Hebel</option>
-        </select>
-      </div>
-
-      {/* Floor Material */}
-      <div className="mb-1">
-        <Subtitle className="text-custom-green-500 mb-2">Material - Lantai</Subtitle>
-      </div>
-      
-      {/* Floor Covering */}
-      <div className="mb-6">
-        <Subtitle className="text-custom-green-400 mb-1">Pelapis</Subtitle>
-        <select
-          name="premiumFloorCovering"
-          value={formData.premiumFloorCovering || ''}
-          onChange={handleChange}
-          className="w-full border border-custom-gray-50 rounded-md px-4 py-3 focus:outline-none focus:ring-1 focus:ring-custom-green-300 appearance-none bg-white"
-        >
-          <option value="" disabled>Pilih disini</option>
-          <option value="keramik">Keramik</option>
-          <option value="vinyl">Vinyl</option>
-          <option value="parket">Parket</option>
-          <option value="granit">Granit</option>
-          <option value="marmer">Marmer</option>
-        </select>
-      </div>
-
-      {/* Doors and Windows */}
-      <div className="mb-1">
-        <Subtitle className="text-custom-green-500 mb-2">Material - Bukaan</Subtitle>
-      </div>
-      
-      {/* Door */}
-      <div className="mb-4">
-        <Subtitle className="text-custom-green-400 mb-1">Pintu</Subtitle>
-        <select
-          name="premiumDoorType"
-          value={formData.premiumDoorType || ''}
-          onChange={handleChange}
-          className="w-full border border-custom-gray-50 rounded-md px-4 py-3 focus:outline-none focus:ring-1 focus:ring-custom-green-300 appearance-none bg-white"
-        >
-          <option value="" disabled>Pilih disini</option>
-          <option value="kayuSolid">Kayu Solid</option>
-          <option value="engineeredWood">Engineered Wood</option>
-          <option value="pvc">PVC</option>
-          <option value="kaca">Kaca</option>
-        </select>
-      </div>
-      
-      {/* Window Glass */}
-      <div className="mb-4">
-        <Subtitle className="text-custom-green-400 mb-1">Daun Jendela</Subtitle>
-        <select
-          name="premiumWindowGlass"
-          value={formData.premiumWindowGlass || ''}
-          onChange={handleChange}
-          className="w-full border border-custom-gray-50 rounded-md px-4 py-3 focus:outline-none focus:ring-1 focus:ring-custom-green-300 appearance-none bg-white"
-        >
-          <option value="" disabled>Pilih disini</option>
-          <option value="kacaBening">Kaca Bening</option>
-          <option value="kacaRayban">Kaca Rayban</option>
-          <option value="kacaTemperedClear">Kaca Tempered Clear</option>
-          <option value="kacaTemperedFrosted">Kaca Tempered Frosted</option>
-        </select>
-      </div>
-      
-      {/* Window Frame */}
-      <div className="mb-6">
-        <Subtitle className="text-custom-green-400 mb-1">Frame Jendela</Subtitle>
-        <select
-          name="premiumWindowFrame"
-          value={formData.premiumWindowFrame || ''}
-          onChange={handleChange}
-          className="w-full border border-custom-gray-50 rounded-md px-4 py-3 focus:outline-none focus:ring-1 focus:ring-custom-green-300 appearance-none bg-white"
-        >
-          <option value="" disabled>Pilih disini</option>
-          <option value="aluminium">Aluminium</option>
-          <option value="upvc">UPVC</option>
-          <option value="kayu">Kayu</option>
-          <option value="besi">Besi</option>
-        </select>
-      </div>
-
-      {/* Foundation */}
-      <div className="mb-1">
-        <Subtitle className="text-custom-green-500 mb-2">Material - Pondasi</Subtitle>
-      </div>
-      
-      {/* Foundation Type */}
-      <div className="mb-4">
-        <Subtitle className="text-custom-green-400 mb-1">Jenis Pondasi</Subtitle>
-        <select
-          name="premiumFoundationType"
-          value={formData.premiumFoundationType || ''}
-          onChange={handleChange}
-          className="w-full border border-custom-gray-50 rounded-md px-4 py-3 focus:outline-none focus:ring-1 focus:ring-custom-green-300 appearance-none bg-white"
-        >
-          <option value="" disabled>Pilih disini</option>
-          <option value="batukali">Batu Kali</option>
-          <option value="sumuran">Sumuran</option>
-          <option value="footplat">Footplat</option>
-          <option value="strauss">Strauss</option>
-        </select>
-      </div>
-      
-      {/* Foundation Material */}
-      <div className="mb-6">
-        <Subtitle className="text-custom-green-400 mb-1">Material Pondasi</Subtitle>
-        <select
-          name="premiumFoundationMaterial"
-          value={formData.premiumFoundationMaterial || ''}
-          onChange={handleChange}
-          className="w-full border border-custom-gray-50 rounded-md px-4 py-3 focus:outline-none focus:ring-1 focus:ring-custom-green-300 appearance-none bg-white"
-        >
-          <option value="" disabled>Pilih disini</option>
-          <option value="beton">Beton</option>
-          <option value="batukali">Batu Kali</option>
-          <option value="betonBertulang">Beton Bertulang</option>
-        </select>
-      </div>
-
-      {/* Beam and Column */}
-      <div className="mb-1">
-        <Subtitle className="text-custom-green-500 mb-2">Material - Balok-Kolom</Subtitle>
-      </div>
-      
-      {/* Structure Material */}
-      <div className="mb-6">
-        <Subtitle className="text-custom-green-400 mb-1">Material Struktur</Subtitle>
-        <select
-          name="premiumStructureMaterial"
-          value={formData.premiumStructureMaterial || ''}
-          onChange={handleChange}
-          className="w-full border border-custom-gray-50 rounded-md px-4 py-3 focus:outline-none focus:ring-1 focus:ring-custom-green-300 appearance-none bg-white"
-        >
-          <option value="" disabled>Pilih disini</option>
-          <option value="betonPraktis">Beton Praktis</option>
-          <option value="konstruksiBaja">Konstruksi Baja</option>
-          <option value="betonBertulang">Beton Bertulang</option>
-        </select>
-      </div>
-    </>
+      {/* Materials Dropdowns */}
+      {!materials ? (
+        <div className="text-center py-4">Loading materials...</div>
+      ) : (
+        <>
+          {/* Group by main categories for better UI organization */}
+          {["Atap", "Dinding", "Lantai", "Bukaan", "Balok-Kolom"].map((mainCategory) => (
+            <div key={mainCategory} className="mb-8">
+              <h3 className="text-md font-medium text-custom-green-400 mb-4">{mainCategory}</h3>
+              
+              {/* Show subcategories for this main category */}
+              {materialCategories
+                .filter(item => item.category === mainCategory)
+                .map((item) => {
+                  const errorKey = `materials2_${item.subcategory.replace(/\s+/g, '')}`;
+                  const materialOptions = getMaterialOptions(item.category, item.subcategory);
+                  
+                  return (
+                    <div className="mb-6" key={`${item.category}-${item.subcategory}`}>
+                      <label className="block text-custom-green-400 mb-2">
+                        {item.subcategory}
+                        {errors[errorKey] && <span className="text-red-500 text-sm ml-2">*{errors[errorKey]}</span>}
+                      </label>
+                      <div className="relative">
+                        <select
+                          name={`materials2[${item.index}]`}
+                          value={formData.materials2[item.index] || ''}
+                          onChange={handleFieldChange}
+                          className={`w-full border ${errors[errorKey] ? 'border-red-500' : 'border-gray-200'} rounded-md px-4 py-3 focus:outline-none focus:ring-1 focus:ring-custom-green-300 appearance-none`}
+                        >
+                          <option value="" disabled>Pilih disini</option>
+                          {materialOptions.map((material) => (
+                            <option key={material.id} value={material.id}>
+                              {material.name}
+                            </option>
+                          ))}
+                        </select>
+                        <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                          </svg>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+          ))}
+        </>
+      )}
+    </div>
   );
 };
 

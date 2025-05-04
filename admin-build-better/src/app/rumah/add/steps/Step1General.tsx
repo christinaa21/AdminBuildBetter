@@ -1,52 +1,250 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
 interface Step1GeneralProps {
   formData: {
-    architectName: string;
-    landArea: string;
-    designStyle: string;
-    floors: string;
-    rooms: string;
-    houseDesignFile: File | null;
-    floorPlanFile: File | null;
+    houseNumber: number | string;
+    landArea: number | string;
+    buildingArea: number | string;
+    buildingHeight: number | string;
+    style: string;
+    floor: number | string;
+    rooms: number | string;
+    object: File | null;
+    houseImageFront: File | null;
+    houseImageSide: File | null;
+    houseImageBack: File | null;
+    floorplans: Array<File | null>;
+    designer: string;
   };
   handleChange: (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
   handleFileChange: (fieldName: string, files: FileList | null) => void;
+  errors: Record<string, string>;
+  setErrors: React.Dispatch<React.SetStateAction<Record<string, string>>>;
 }
 
-const Step1General: React.FC<Step1GeneralProps> = ({ formData, handleChange, handleFileChange }) => {
+const Step1General: React.FC<Step1GeneralProps> = ({ 
+  formData, 
+  handleChange, 
+  handleFileChange, 
+  errors, 
+  setErrors 
+}) => {
+  // Simplified numeric input handler
+  const handleNumericChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    
+    // Allow empty values or valid numeric inputs (including decimal points)
+    // This regex allows empty strings, valid integers, and valid decimals (including intermediate states)
+    const regex = /^$|^[0-9]*\.?[0-9]*$/;
+    
+    if (regex.test(value)) {
+      handleChange(e);
+      
+      // Clear error for this field if there is a value
+      if (value !== '') {
+        const newErrors = {...errors};
+        delete newErrors[name];
+        setErrors(newErrors);
+      }
+    }
+  };
+
+  // Validation function
+  const validate = (): boolean => {
+    const newErrors: Record<string, string> = {};
+    
+    // Check required numeric fields (checking for empty string or non-positive numbers)
+    if (!formData.houseNumber) 
+      newErrors.houseNumber = "Nomor rumah wajib diisi";
+    else if (Number(formData.houseNumber) <= 0)
+      newErrors.houseNumber = "Nomor rumah harus lebih dari 0";
+    
+    if (!formData.landArea) 
+      newErrors.landArea = "Luas lahan wajib diisi";
+    else if (Number(formData.landArea) <= 0)
+      newErrors.landArea = "Luas lahan harus lebih dari 0";
+    
+    if (!formData.buildingArea) 
+      newErrors.buildingArea = "Luas bangunan wajib diisi";
+    else if (Number(formData.buildingArea) <= 0)
+      newErrors.buildingArea = "Luas bangunan harus lebih dari 0";
+    
+    if (!formData.buildingHeight) 
+      newErrors.buildingHeight = "Tinggi bangunan wajib diisi";
+    else if (Number(formData.buildingHeight) <= 0)
+      newErrors.buildingHeight = "Tinggi bangunan harus lebih dari 0";
+    
+    // Check other required fields
+    if (!formData.style) newErrors.style = "Gaya desain wajib dipilih";
+    if (!formData.floor) newErrors.floor = "Jumlah lantai wajib dipilih";
+    if (!formData.rooms) newErrors.rooms = "Jumlah kamar wajib dipilih";
+    if (!formData.designer) newErrors.designer = "Nama arsitek wajib diisi";
+    
+    // Check required file fields
+    if (!formData.object) newErrors.object = "3D rumah wajib diunggah";
+    if (!formData.houseImageFront) newErrors.houseImageFront = "Tampak depan wajib diunggah";
+    if (!formData.houseImageSide) newErrors.houseImageSide = "Tampak samping wajib diunggah";
+    if (!formData.houseImageBack) newErrors.houseImageBack = "Tampak belakang wajib diunggah";
+    
+    // Check floor plans based on floor count
+    if (formData.floor && Number(formData.floor) > 0) {
+      for (let i = 0; i < Number(formData.floor); i++) {
+        if (!formData.floorplans[i]) {
+          newErrors[`floorplans[${i}]`] = `Denah lantai ${i+1} wajib diunggah`;
+        }
+      }
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // Validate on floor count change
+  useEffect(() => {
+    if (formData.floor) {
+      validate();
+    }
+  }, [formData.floor]);
+
+  // Create floor plan upload fields based on floor count
+  const renderFloorPlanUploads = () => {
+    if (!formData.floor || Number(formData.floor) === 0) return null;
+    
+    const uploads = [];
+    for (let i = 0; i < Number(formData.floor); i++) {
+      uploads.push(
+        <div className="mb-6" key={`floorplan-${i}`}>
+          <label className="block text-custom-green-400 mb-2">
+            Denah Lantai {i+1}
+            {errors[`floorplans[${i}]`] && (
+              <span className="text-red-500 text-sm ml-2">*{errors[`floorplans[${i}]`]}</span>
+            )}
+          </label>
+          <label className={`w-full flex items-center justify-between border ${errors[`floorplans[${i}]`] ? 'border-red-500' : 'border-gray-200'} rounded-md px-4 py-3 text-custom-green-300 cursor-pointer`}>
+            <span>
+              {formData.floorplans && formData.floorplans[i] 
+                ? formData.floorplans[i]?.name 
+                : "Unggah disini"}
+            </span>
+            <input
+              type="file"
+              name={`floorplans[${i}]`}
+              accept="image/*"
+              onChange={(e) => {
+                handleFileChange(`floorplans[${i}]`, e.target.files);
+                if (e.target.files && e.target.files.length > 0) {
+                  const newErrors = {...errors};
+                  delete newErrors[`floorplans[${i}]`];
+                  setErrors(newErrors);
+                }
+              }}
+              className="hidden"
+            />
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-custom-green-300">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+          </label>
+        </div>
+      );
+    }
+    return uploads;
+  };
+
   return (
     <div className="mb-8">
       <h2 className="text-lg font-medium text-custom-green-500 mb-6">Preferensi Desain</h2>
       
+      {/* House Number */}
+      <div className="mb-6">
+        <label className="block text-custom-green-400 mb-2">
+          Nomor Rumah di Sheet
+          {errors.houseNumber && <span className="text-red-500 text-sm ml-2">*{errors.houseNumber}</span>}
+        </label>
+        <input
+          type="text"
+          name="houseNumber"
+          value={formData.houseNumber}
+          onChange={handleNumericChange}
+          placeholder="Tulis disini"
+          className={`w-full border ${errors.houseNumber ? 'border-red-500' : 'border-gray-200'} rounded-md px-4 py-3 focus:outline-none focus:ring-1 focus:ring-custom-green-300`}
+        />
+      </div>
+
       {/* Land Area */}
       <div className="mb-6">
-        <label className="block text-custom-green-400 mb-2">Luas Lahan (m2)</label>
+        <label className="block text-custom-green-400 mb-2">
+          Luas Lahan (m2)
+          {errors.landArea && <span className="text-red-500 text-sm ml-2">*{errors.landArea}</span>}
+        </label>
         <input
           type="text"
           name="landArea"
           value={formData.landArea}
-          onChange={handleChange}
+          onChange={handleNumericChange}
           placeholder="Tulis disini"
-          className="w-full border border-gray-200 rounded-md px-4 py-3 focus:outline-none focus:ring-1 focus:ring-custom-green-300"
+          className={`w-full border ${errors.landArea ? 'border-red-500' : 'border-gray-200'} rounded-md px-4 py-3 focus:outline-none focus:ring-1 focus:ring-custom-green-300`}
+        />
+      </div>
+
+      {/* Building Area */}
+      <div className="mb-6">
+        <label className="block text-custom-green-400 mb-2">
+          Luas Bangunan (m2)
+          {errors.buildingArea && <span className="text-red-500 text-sm ml-2">*{errors.buildingArea}</span>}
+        </label>
+        <input
+          type="text"
+          name="buildingArea"
+          value={formData.buildingArea}
+          onChange={handleNumericChange}
+          placeholder="Tulis disini"
+          className={`w-full border ${errors.buildingArea ? 'border-red-500' : 'border-gray-200'} rounded-md px-4 py-3 focus:outline-none focus:ring-1 focus:ring-custom-green-300`}
+        />
+      </div>
+
+      {/* Building Height */}
+      <div className="mb-6">
+        <label className="block text-custom-green-400 mb-2">
+          Tinggi Bangunan (m)
+          {errors.buildingHeight && <span className="text-red-500 text-sm ml-2">*{errors.buildingHeight}</span>}
+        </label>
+        <input
+          type="text"
+          name="buildingHeight"
+          value={formData.buildingHeight}
+          onChange={handleNumericChange}
+          placeholder="Tulis disini"
+          className={`w-full border ${errors.buildingHeight ? 'border-red-500' : 'border-gray-200'} rounded-md px-4 py-3 focus:outline-none focus:ring-1 focus:ring-custom-green-300`}
         />
       </div>
       
       {/* Design Style */}
       <div className="mb-6">
-        <label className="block text-custom-green-400 mb-2">Gaya Desain</label>
+        <label className="block text-custom-green-400 mb-2">
+          Gaya Desain
+          {errors.style && <span className="text-red-500 text-sm ml-2">*{errors.style}</span>}
+        </label>
         <div className="relative">
           <select
-            name="designStyle"
-            value={formData.designStyle}
-            onChange={handleChange}
-            className="w-full border border-gray-200 rounded-md px-4 py-3 focus:outline-none focus:ring-1 focus:ring-custom-green-300 appearance-none"
+            name="style"
+            value={formData.style}
+            onChange={(e) => {
+              handleChange(e);
+              if (e.target.value) {
+                const newErrors = {...errors};
+                delete newErrors.style;
+                setErrors(newErrors);
+              }
+            }}
+            className={`w-full border ${errors.style ? 'border-red-500' : 'border-gray-200'} rounded-md px-4 py-3 focus:outline-none focus:ring-1 focus:ring-custom-green-300 appearance-none`}
           >
             <option value="" disabled>Pilih disini</option>
             <option value="modern">Modern</option>
-            <option value="minimalis">Minimalis</option>
-            <option value="industrial">Industrial</option>
-            <option value="classic">Classic</option>
+            <option value="minimalis">Skandinavia</option>
+            <option value="industrial">Industrialis</option>
+            <option value="classic">Klasik</option>
           </select>
           <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
             <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -56,21 +254,31 @@ const Step1General: React.FC<Step1GeneralProps> = ({ formData, handleChange, han
         </div>
       </div>
       
-      {/* Number of Floors */}
+      {/* Number of floor */}
       <div className="mb-6">
-        <label className="block text-custom-green-400 mb-2">Jumlah Lantai</label>
+        <label className="block text-custom-green-400 mb-2">
+          Jumlah Lantai
+          {errors.floor && <span className="text-red-500 text-sm ml-2">*{errors.floor}</span>}
+        </label>
         <div className="relative">
           <select
-            name="floors"
-            value={formData.floors}
-            onChange={handleChange}
-            className="w-full border border-gray-200 rounded-md px-4 py-3 focus:outline-none focus:ring-1 focus:ring-custom-green-300 appearance-none"
+            name="floor"
+            value={formData.floor}
+            onChange={(e) => {
+              handleChange(e);
+              if (e.target.value) {
+                const newErrors = {...errors};
+                delete newErrors.floor;
+                setErrors(newErrors);
+              }
+            }}
+            className={`w-full border ${errors.floor ? 'border-red-500' : 'border-gray-200'} rounded-md px-4 py-3 focus:outline-none focus:ring-1 focus:ring-custom-green-300 appearance-none`}
           >
             <option value="" disabled>Pilih disini</option>
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4+">4+</option>
+            <option value={1}>1</option>
+            <option value={2}>2</option>
+            <option value={3}>3</option>
+            <option value={4}>4</option>
           </select>
           <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
             <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -82,20 +290,30 @@ const Step1General: React.FC<Step1GeneralProps> = ({ formData, handleChange, han
       
       {/* Number of Rooms */}
       <div className="mb-8">
-        <label className="block text-custom-green-400 mb-2">Jumlah Kamar</label>
+        <label className="block text-custom-green-400 mb-2">
+          Jumlah Kamar
+          {errors.rooms && <span className="text-red-500 text-sm ml-2">*{errors.rooms}</span>}
+        </label>
         <div className="relative">
           <select
             name="rooms"
             value={formData.rooms}
-            onChange={handleChange}
-            className="w-full border border-gray-200 rounded-md px-4 py-3 focus:outline-none focus:ring-1 focus:ring-custom-green-300 appearance-none"
+            onChange={(e) => {
+              handleChange(e);
+              if (e.target.value) {
+                const newErrors = {...errors};
+                delete newErrors.rooms;
+                setErrors(newErrors);
+              }
+            }}
+            className={`w-full border ${errors.rooms ? 'border-red-500' : 'border-gray-200'} rounded-md px-4 py-3 focus:outline-none focus:ring-1 focus:ring-custom-green-300 appearance-none`}
           >
             <option value="" disabled>Pilih disini</option>
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5+">5+</option>
+            <option value={1}>1</option>
+            <option value={2}>2</option>
+            <option value={3}>3</option>
+            <option value={4}>4</option>
+            <option value={5}>5</option>
           </select>
           <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
             <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -107,19 +325,27 @@ const Step1General: React.FC<Step1GeneralProps> = ({ formData, handleChange, han
 
       <h2 className="text-lg font-medium text-custom-green-500 mb-6">Unggah Desain</h2>
       
-      {/* House Design Upload */}
+      {/* 3D Rumah */}
       <div className="mb-6">
-        <label className="block text-custom-green-400 mb-2">Rumah 3D</label>
-        <label className="w-full flex items-center justify-between border border-gray-200 rounded-md px-4 py-3 text-custom-green-300 cursor-pointer">
+        <label className="block text-custom-green-400 mb-2">
+          3D Rumah
+          {errors.object && <span className="text-red-500 text-sm ml-2">*{errors.object}</span>}
+        </label>
+        <label className={`w-full flex items-center justify-between border ${errors.object ? 'border-red-500' : 'border-gray-200'} rounded-md px-4 py-3 text-custom-green-300 cursor-pointer`}>
           <span>
-            {formData.houseDesignFile ? formData.houseDesignFile.name : "Unggah disini"}
+            {formData.object ? formData.object.name : "Unggah disini"}
           </span>
           <input
             type="file"
-            name="houseDesignFile"
-            accept="image/*"
+            name="object"
+            accept=".glb"
             onChange={(e) => {
-              handleFileChange('houseDesignFile', e.target.files);
+              handleFileChange('object', e.target.files);
+              if (e.target.files && e.target.files.length > 0) {
+                const newErrors = {...errors};
+                delete newErrors.object;
+                setErrors(newErrors);
+              }
             }}
             className="hidden"
           />
@@ -131,73 +357,27 @@ const Step1General: React.FC<Step1GeneralProps> = ({ formData, handleChange, han
         </label>
       </div>
       
-      {/* Desain Rumah - tampak depan */}
+      {/* Desain Rumah - Tampak Depan */}
       <div className="mb-6">
-        <label className="block text-custom-green-400 mb-2">Desain Rumah - tampak depan</label>
-        <label className="w-full flex items-center justify-between border border-gray-200 rounded-md px-4 py-3 text-custom-green-300 cursor-pointer">
-          <span>Unggah disini</span>
-          <input
-            type="file"
-            accept="image/*"
-            className="hidden"
-          />
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-custom-green-300">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="7 10 12 15 17 10"></polyline>
-            <line x1="12" y1="15" x2="12" y2="3"></line>
-          </svg>
+        <label className="block text-custom-green-400 mb-2">
+          Desain Rumah - Tampak Depan
+          {errors.houseImageFront && <span className="text-red-500 text-sm ml-2">*{errors.houseImageFront}</span>}
         </label>
-      </div>
-      
-      {/* Desain Rumah - tampak samping */}
-      <div className="mb-6">
-        <label className="block text-custom-green-400 mb-2">Desain Rumah - tampak samping</label>
-        <label className="w-full flex items-center justify-between border border-gray-200 rounded-md px-4 py-3 text-custom-green-300 cursor-pointer">
-          <span>Unggah disini</span>
-          <input
-            type="file"
-            accept="image/*"
-            className="hidden"
-          />
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-custom-green-300">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="7 10 12 15 17 10"></polyline>
-            <line x1="12" y1="15" x2="12" y2="3"></line>
-          </svg>
-        </label>
-      </div>
-      
-      {/* Desain Rumah - tampak belakang */}
-      <div className="mb-6">
-        <label className="block text-custom-green-400 mb-2">Desain Rumah - tampak belakang</label>
-        <label className="w-full flex items-center justify-between border border-gray-200 rounded-md px-4 py-3 text-custom-green-300 cursor-pointer">
-          <span>Unggah disini</span>
-          <input
-            type="file"
-            accept="image/*"
-            className="hidden"
-          />
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-custom-green-300">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="7 10 12 15 17 10"></polyline>
-            <line x1="12" y1="15" x2="12" y2="3"></line>
-          </svg>
-        </label>
-      </div>
-      
-      {/* Denah Rumah 1 */}
-      <div className="mb-6">
-        <label className="block text-custom-green-400 mb-2">Denah Rumah 1</label>
-        <label className="w-full flex items-center justify-between border border-gray-200 rounded-md px-4 py-3 text-custom-green-300 cursor-pointer">
+        <label className={`w-full flex items-center justify-between border ${errors.houseImageFront ? 'border-red-500' : 'border-gray-200'} rounded-md px-4 py-3 text-custom-green-300 cursor-pointer`}>
           <span>
-            {formData.floorPlanFile ? formData.floorPlanFile.name : "Unggah disini"}
+            {formData.houseImageFront ? formData.houseImageFront.name : "Unggah disini"}
           </span>
           <input
             type="file"
-            name="floorPlanFile"
-            accept="image/*,.pdf"
+            name="houseImageFront"
+            accept="image/*"
             onChange={(e) => {
-              handleFileChange('floorPlanFile', e.target.files);
+              handleFileChange('houseImageFront', e.target.files);
+              if (e.target.files && e.target.files.length > 0) {
+                const newErrors = {...errors};
+                delete newErrors.houseImageFront;
+                setErrors(newErrors);
+              }
             }}
             className="hidden"
           />
@@ -209,14 +389,28 @@ const Step1General: React.FC<Step1GeneralProps> = ({ formData, handleChange, han
         </label>
       </div>
       
-      {/* Denah Rumah 2 */}
+      {/* Desain Rumah - Tampak Samping */}
       <div className="mb-6">
-        <label className="block text-custom-green-400 mb-2">Denah Rumah 2</label>
-        <label className="w-full flex items-center justify-between border border-gray-200 rounded-md px-4 py-3 text-custom-green-300 cursor-pointer">
-          <span>Unggah disini</span>
+        <label className="block text-custom-green-400 mb-2">
+          Desain Rumah - Tampak Samping
+          {errors.houseImageSide && <span className="text-red-500 text-sm ml-2">*{errors.houseImageSide}</span>}
+        </label>
+        <label className={`w-full flex items-center justify-between border ${errors.houseImageSide ? 'border-red-500' : 'border-gray-200'} rounded-md px-4 py-3 text-custom-green-300 cursor-pointer`}>
+          <span>
+            {formData.houseImageSide ? formData.houseImageSide.name : "Unggah disini"}
+          </span>
           <input
             type="file"
-            accept="image/*,.pdf"
+            name="houseImageSide"
+            accept="image/*"
+            onChange={(e) => {
+              handleFileChange('houseImageSide', e.target.files);
+              if (e.target.files && e.target.files.length > 0) {
+                const newErrors = {...errors};
+                delete newErrors.houseImageSide;
+                setErrors(newErrors);
+              }
+            }}
             className="hidden"
           />
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-custom-green-300">
@@ -226,17 +420,62 @@ const Step1General: React.FC<Step1GeneralProps> = ({ formData, handleChange, han
           </svg>
         </label>
       </div>
-      
+
+      {/* Desain Rumah - Tampak Belakang */}
+      <div className="mb-6">
+        <label className="block text-custom-green-400 mb-2">
+          Desain Rumah - Tampak Belakang
+          {errors.houseImageBack && <span className="text-red-500 text-sm ml-2">*{errors.houseImageBack}</span>}
+        </label>
+        <label className={`w-full flex items-center justify-between border ${errors.houseImageBack ? 'border-red-500' : 'border-gray-200'} rounded-md px-4 py-3 text-custom-green-300 cursor-pointer`}>
+          <span>
+            {formData.houseImageBack ? formData.houseImageBack.name : "Unggah disini"}
+          </span>
+          <input
+            type="file"
+            name="houseImageBack"
+            accept="image/*"
+            onChange={(e) => {
+              handleFileChange('houseImageBack', e.target.files);
+              if (e.target.files && e.target.files.length > 0) {
+                const newErrors = {...errors};
+                delete newErrors.houseImageBack;
+                setErrors(newErrors);
+              }
+            }}
+            className="hidden"
+          />
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-custom-green-300">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+        </label>
+      </div>
+
+      {/* Dynamic Floor Plans based on number of floors */}
+      {renderFloorPlanUploads()}
+
       {/* Architect Name */}
       <div className="mb-6">
-        <label className="block text-custom-green-400 mb-2">Nama Arsitek</label>
+        <label className="block text-custom-green-400 mb-2">
+          Nama Arsitek
+          {errors.designer && <span className="text-red-500 text-sm ml-2">*{errors.designer}</span>}
+        </label>
         <input
           type="text"
-          name="architectName"
-          value={formData.architectName}
-          onChange={handleChange}
+          name="designer"
+          value={formData.designer}
+          onChange={(e) => {
+            handleChange(e);
+            if (e.target.value) {
+              const newErrors = {...errors};
+              delete newErrors.designer;
+              setErrors(newErrors);
+            }
+          }}
           placeholder="Tulis disini"
-          className="w-full border border-gray-200 rounded-md px-4 py-3 focus:outline-none focus:ring-1 focus:ring-custom-green-300"
+          className={`w-full border ${errors.designer ? 'border-red-500' : 'border-gray-200'} rounded-md px-4 py-3 focus:outline-none focus:ring-1 focus:ring-custom-green-300`}
         />
       </div>
     </div>

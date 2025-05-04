@@ -1,5 +1,3 @@
-// File: app/api/materials/route.ts
-// For App Router in Next.js 13+
 import { NextRequest } from 'next/server';
 
 export async function GET(request: Request) {
