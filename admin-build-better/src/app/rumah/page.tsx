@@ -137,7 +137,6 @@ const Rumah: React.FC = () => {
 
   const handleEdit = (id: string) => {
     console.log(`Edit house with id: ${id}`);
-    // Navigate to edit page
     router.push(`/rumah/edit/${id}`);
   };
 
