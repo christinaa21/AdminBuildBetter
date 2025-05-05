@@ -41,24 +41,6 @@ const Step3Original: React.FC<Step3OriginalProps> = ({
   setErrors,
   materials
 }) => {
-  // Validation function
-  const validate = (): boolean => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.budget1) newErrors.budget1 = "Rentang budget original wajib diisi";
-    
-    // Validate all material selections
-    materialCategories.forEach(item => {
-      if (!formData.materials1[item.index]) {
-        newErrors[`materials1_${item.subcategory.replace(/\s+/g, '')}`] = 
-          `Material ${item.subcategory} wajib dipilih`;
-      }
-    });
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
   // Get materials for a specific category and subcategory
   const getMaterialOptions = (category: string, subcategory: string) => {
     if (!materials) return [];

@@ -41,24 +41,6 @@ const Step4Premium: React.FC<Step4PremiumProps> = ({
   setErrors,
   materials
 }) => {
-  // Validation function
-  const validate = (): boolean => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.budget2) newErrors.budget2 = "Rentang budget premium wajib diisi";
-    
-    // Validate all material selections
-    materialCategories.forEach(item => {
-      if (!formData.materials2[item.index]) {
-        newErrors[`materials2_${item.subcategory.replace(/\s+/g, '')}`] = 
-          `Material ${item.subcategory} wajib dipilih`;
-      }
-    });
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
   // Get materials for a specific category and subcategory
   const getMaterialOptions = (category: string, subcategory: string) => {
     if (!materials) return [];

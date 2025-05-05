@@ -55,9 +55,6 @@ const Step2Ekonomis: React.FC<Step2EkonomisProps> = ({
   setMaterials
 }) => {
   const [loading, setLoading] = useState<boolean>(false);
-  // For debugging
-  const [lastSelected, setLastSelected] = useState<{name: string, value: string} | null>(null);
-
   // Fetch materials if they haven't been loaded yet
   useEffect(() => {
     const fetchMaterials = async () => {
@@ -85,24 +82,6 @@ const Step2Ekonomis: React.FC<Step2EkonomisProps> = ({
     fetchMaterials();
   }, [materials, setMaterials]);
 
-  // Validation function
-  const validate = (): boolean => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.budget) newErrors.budget = "Rentang budget wajib diisi";
-    
-    // Validate all material selections
-    materialCategories.forEach(item => {
-      if (!formData.materials0[item.index]) {
-        newErrors[`materials0_${item.subcategory.replace(/\s+/g, '')}`] = 
-          `Material ${item.subcategory} wajib dipilih`;
-      }
-    });
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
   // Get materials for a specific category and subcategory
   const getMaterialOptions = (category: string, subcategory: string) => {
     if (!materials) return [];
@@ -115,10 +94,7 @@ const Step2Ekonomis: React.FC<Step2EkonomisProps> = ({
   };
 
   // Custom handle change function with direct access to formData
-  const handleMaterialChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    // For debugging - store the last selection
-    setLastSelected({name: e.target.name, value: e.target.value});
-    
+  const handleMaterialChange = (e: React.ChangeEvent<HTMLSelectElement>) => {    
     // Call the parent's handleChange function
     handleChange(e);
     

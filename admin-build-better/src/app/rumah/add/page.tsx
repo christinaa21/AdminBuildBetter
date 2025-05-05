@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -302,22 +303,6 @@ const AddHousePage: React.FC = () => {
     const newErrors = {...errors};
     delete newErrors[fieldName];
     setErrors(newErrors);
-  };
-
-  // Helper function to validate a numeric field
-  const validateNumericField = (value: string | number, fieldName: string, errorMessage: string): boolean => {
-    // If the value is empty or not a valid number
-    if (!value || value === '' || 
-        (typeof value === 'string' && !parseFloat(value)) || 
-        (typeof value === 'number' && (isNaN(value) || value <= 0))) {
-      
-      setErrors(prev => ({
-        ...prev,
-        [fieldName]: errorMessage
-      }));
-      return false;
-    }
-    return true;
   };
 
   // Validate the current step before proceeding

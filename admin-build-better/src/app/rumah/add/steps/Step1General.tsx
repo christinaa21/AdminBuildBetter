@@ -59,67 +59,6 @@ const Step1General: React.FC<Step1GeneralProps> = ({
     }
   };
 
-  // Validation function
-  const validate = (): boolean => {
-    const newErrors: Record<string, string> = {};
-    
-    // Check required numeric fields (checking for empty string or non-positive numbers)
-    if (!formData.houseNumber) 
-      newErrors.houseNumber = "Nomor rumah wajib diisi";
-    else if (Number(formData.houseNumber) <= 0)
-      newErrors.houseNumber = "Nomor rumah harus lebih dari 0";
-    
-    if (!formData.landArea) 
-      newErrors.landArea = "Luas lahan wajib diisi";
-    else if (Number(formData.landArea) <= 0)
-      newErrors.landArea = "Luas lahan harus lebih dari 0";
-    
-    if (!formData.buildingArea) 
-      newErrors.buildingArea = "Luas bangunan wajib diisi";
-    else if (Number(formData.buildingArea) <= 0)
-      newErrors.buildingArea = "Luas bangunan harus lebih dari 0";
-    
-    if (!formData.buildingHeight) 
-      newErrors.buildingHeight = "Tinggi bangunan wajib diisi";
-    else if (Number(formData.buildingHeight) <= 0)
-      newErrors.buildingHeight = "Tinggi bangunan harus lebih dari 0";
-    
-    // Check other required fields
-    if (!formData.style) newErrors.style = "Gaya desain wajib dipilih";
-    if (!formData.floor) newErrors.floor = "Jumlah lantai wajib dipilih";
-    if (!formData.rooms) newErrors.rooms = "Jumlah kamar wajib dipilih";
-    if (!formData.designer) newErrors.designer = "Nama arsitek wajib diisi";
-    
-    // File validations modified for edit mode
-    if (!isEditing) {
-      if (!formData.object) newErrors.object = "3D rumah wajib diunggah";
-      if (!formData.houseImageFront) newErrors.houseImageFront = "Tampak depan wajib diunggah";
-      if (!formData.houseImageSide) newErrors.houseImageSide = "Tampak samping wajib diunggah";
-      if (!formData.houseImageBack) newErrors.houseImageBack = "Tampak belakang wajib diunggah";
-    } else {
-      // For edit mode, only validate if both original and new file are missing
-      if (!originalFiles?.object && !formData.object) newErrors.object = "3D rumah wajib diunggah";
-      if (!originalFiles?.houseImageFront && !formData.houseImageFront) newErrors.houseImageFront = "Tampak depan wajib diunggah";
-      if (!originalFiles?.houseImageSide && !formData.houseImageSide) newErrors.houseImageSide = "Tampak samping wajib diunggah";
-      if (!originalFiles?.houseImageBack && !formData.houseImageBack) newErrors.houseImageBack = "Tampak belakang wajib diunggah";
-    }
-
-    // Check floor plans based on floor count
-    if (formData.floor && Number(formData.floor) > 0) {
-      for (let i = 0; i < Number(formData.floor); i++) {
-        const hasOriginal = originalFiles?.floorplans?.[i];
-        const hasNew = formData.floorplans[i];
-        
-        if (!hasOriginal && !hasNew) {
-          newErrors[`floorplans[${i}]`] = `Denah lantai ${i+1} wajib diunggah`;
-        }
-      }
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
   // Modified file display logic
   const getFileName = (field: 'object' | 'houseImageFront' | 'houseImageSide' | 'houseImageBack'): string => {
     if (formData[field]) return (formData[field] as File).name;

@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // File: app/api/rumah/route.ts
 import { NextRequest } from "next/server";
 
