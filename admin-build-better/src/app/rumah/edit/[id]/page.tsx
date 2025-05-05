@@ -2,18 +2,18 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { FaArrowLeft } from 'react-icons/fa';
 import { H2 } from '@/components/Typography';
 import Button from '@/components/Button';
 import ProgressSteps from '@/components/ProgressSteps';
 import NavigationBar from '@/components/NavigationBar';
 
-// Step components
-import Step1General from './steps/Step1General';
-import Step2Ekonomis from './steps/Step2Ekonomis';
-import Step3Original from './steps/Step3Original';
-import Step4Premium from './steps/Step4Premium';
+// Step components - reused from AddHousePage
+import Step1General from '../../add/steps/Step1General';
+import Step2Ekonomis from '../../add/steps/Step2Ekonomis';
+import Step3Original from '../../add/steps/Step3Original';
+import Step4Premium from '../../add/steps/Step4Premium';
 
 // Define Material interface
 interface Material {
@@ -36,7 +36,7 @@ interface MaterialCategory {
 
 // Define the comprehensive form data interface that includes all fields from all steps
 interface FormData {
-  // Step 1: General (updated to match Step1General component)
+  // Step 1: General
   houseNumber: number | string;
   landArea: number | string;
   buildingArea: number | string;
@@ -64,8 +64,19 @@ interface FormData {
   materials2: string[];
 }
 
-const AddHousePage: React.FC = () => {
+// Track which fields were modified
+interface ModifiedFields {
+  nonFileFields: boolean;
+  object: boolean;
+  houseImageFront: boolean;
+  houseImageSide: boolean;
+  houseImageBack: boolean;
+  floorplans: boolean;
+}
+
+const EditHousePage: React.FC = () => {
   const router = useRouter();
+  const params = useParams();
   const [currentStep, setCurrentStep] = useState<number>(0);
   const steps = ['Informasi Dasar', 'Material Ekonomis', 'Material Original', 'Material Premium'];
   
@@ -79,6 +90,22 @@ const AddHousePage: React.FC = () => {
   
   // State for loading status during submission
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+
+  // Track house ID from URL
+  const [houseId, setHouseId] = useState<string>('');
+
+  // Track original house data to compare with edited data
+  const [originalHouseData, setOriginalHouseData] = useState<any>(null);
+
+  // Track which fields were modified
+  const [modifiedFields, setModifiedFields] = useState<ModifiedFields>({
+    nonFileFields: false,
+    object: false,
+    houseImageFront: false,
+    houseImageSide: false,
+    houseImageBack: false,
+    floorplans: false
+  });
 
   // Main form state - all fields from all steps
   const [formData, setFormData] = useState<FormData>({
@@ -110,28 +137,131 @@ const AddHousePage: React.FC = () => {
     materials2: Array(10).fill(''),
   });
 
-  // Check for authentication on component mount
+  // Check for authentication and get houseId on component mount
   useEffect(() => {
     const token = localStorage.getItem('authToken');
     if (!token) {
-      // Redirect to login if no token is found
       router.push('/login');
+      return;
     }
-  }, [router]);
+
+    // Get ID from route params
+    if (params?.id) {
+      setHouseId(params.id as string);
+      fetchHouseData(params.id as string, token);
+    } else {
+      router.push('/rumah');
+    }
+  }, [router, params?.id]);
+
+  // Fetch house data by ID
+  const fetchHouseData = async (id: string, token: string) => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(`/api/rumah/${id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('userData');
+          router.push('/login');
+          return;
+        }
+        throw new Error('Failed to fetch house data');
+      }
+
+      const result = await response.json();
+      if (result.code === 200) {
+        const houseData = result.data;
+        setOriginalHouseData(houseData);
+        
+        // Format budget ranges
+        const budgets = {
+          budget: `${formatCurrency(houseData.budgetMin[0])}-${formatCurrency(houseData.budgetMax[0])}`,
+          budget1: `${formatCurrency(houseData.budgetMin[1])}-${formatCurrency(houseData.budgetMax[1])}`,
+          budget2: `${formatCurrency(houseData.budgetMin[2])}-${formatCurrency(houseData.budgetMax[2])}`
+        };
+
+        // Extract materials
+        const materials0 = extractMaterialIds(houseData.materials0);
+        const materials1 = extractMaterialIds(houseData.materials1);
+        const materials2 = extractMaterialIds(houseData.materials2);
+
+        // Populate form data
+        setFormData({
+          houseNumber: houseData.houseNumber,
+          landArea: houseData.landArea,
+          buildingArea: houseData.buildingArea,
+          buildingHeight: houseData.buildingHeight,
+          style: houseData.style,
+          floor: houseData.floor,
+          rooms: houseData.rooms,
+          object: null, // File objects will be null initially since we only have URLs
+          houseImageFront: null,
+          houseImageSide: null,
+          houseImageBack: null,
+          floorplans: Array(houseData.floor || 0).fill(null),
+          designer: houseData.designer,
+          budget: budgets.budget,
+          materials0: materials0,
+          budget1: budgets.budget1,
+          materials1: materials1,
+          budget2: budgets.budget2,
+          materials2: materials2
+        });
+
+        // Now fetch materials for the form
+        fetchMaterials(token);
+      } else {
+        setError('Failed to load house data. Please try again later.');
+        setIsLoading(false);
+      }
+    } catch (error) {
+      console.error('Error fetching house data:', error);
+      setError('An error occurred while fetching house data. Please try again later.');
+      setIsLoading(false);
+    }
+  };
+
+  // Helper function to format currency
+  const formatCurrency = (value: number): string => {
+    return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  };
+
+  // Helper function to extract material IDs from materials object
+  const extractMaterialIds = (materialsObj: any): string[] => {
+    const materialIds: string[] = [];
+    
+    if (!materialsObj) return Array(10).fill('');
+
+    // Iterate through categories and subcategories to extract material IDs
+    Object.keys(materialsObj).forEach(category => {
+      Object.keys(materialsObj[category]).forEach(subCategory => {
+        const material = materialsObj[category][subCategory];
+        if (material && material.id) {
+          materialIds.push(material.id);
+        }
+      });
+    });
+
+    // Ensure we have 10 slots (padded with empty strings if needed)
+    const paddedIds = [...materialIds];
+    while (paddedIds.length < 10) {
+      paddedIds.push('');
+    }
+
+    return paddedIds;
+  };
 
   // Fetch materials data when component mounts using useCallback for proper dependency management
-  const fetchMaterials = useCallback(async () => {
-    setIsLoading(true);
+  const fetchMaterials = useCallback(async (token: string) => {
     setError(null);
     
     try {
-      const token = localStorage.getItem('authToken');
-      
-      if (!token) {
-        router.push('/login');
-        return;
-      }
-      
       // Use Next.js API route as a proxy to avoid CORS issues
       const response = await fetch('/api/materials?grouped=true', {
         headers: {
@@ -165,11 +295,6 @@ const AddHousePage: React.FC = () => {
       setIsLoading(false);
     }
   }, [router]);
-
-  // Fetch materials on component mount
-  useEffect(() => {
-    fetchMaterials();
-  }, [fetchMaterials]);
 
   // Convert the hierarchical material categories into a flat record for easy access
   const processMaterialsForComponents = useCallback(() => {
@@ -224,6 +349,13 @@ const AddHousePage: React.FC = () => {
             [arrayName]: newArray
           };
         });
+
+        // Mark non-file fields as modified
+        setModifiedFields(prev => ({
+          ...prev,
+          nonFileFields: true
+        }));
+        
         return;
       }
     }
@@ -243,6 +375,12 @@ const AddHousePage: React.FC = () => {
           [name]: value,
         }));
         
+        // Mark non-file fields as modified
+        setModifiedFields(prev => ({
+          ...prev,
+          nonFileFields: true
+        }));
+        
         // Clear error for this field if there is a value
         if (value !== '') {
           const newErrors = {...errors};
@@ -255,6 +393,12 @@ const AddHousePage: React.FC = () => {
       setFormData(prev => ({
         ...prev,
         [name]: value,
+      }));
+
+      // Mark non-file fields as modified
+      setModifiedFields(prev => ({
+        ...prev,
+        nonFileFields: true
       }));
     }
   };
@@ -282,6 +426,12 @@ const AddHousePage: React.FC = () => {
           ...prev,
           floorplans: newFloorplans,
         }));
+
+        // Mark floorplans as modified
+        setModifiedFields(prev => ({
+          ...prev,
+          floorplans: true
+        }));
         
         // Clear error for this field
         const newErrors = {...errors};
@@ -297,27 +447,17 @@ const AddHousePage: React.FC = () => {
       ...prev,
       [fieldName]: files[0], // Only take the first file
     }));
+
+    // Mark the specific file field as modified
+    setModifiedFields(prev => ({
+      ...prev,
+      [fieldName]: true
+    }));
     
     // Clear error for this field
     const newErrors = {...errors};
     delete newErrors[fieldName];
     setErrors(newErrors);
-  };
-
-  // Helper function to validate a numeric field
-  const validateNumericField = (value: string | number, fieldName: string, errorMessage: string): boolean => {
-    // If the value is empty or not a valid number
-    if (!value || value === '' || 
-        (typeof value === 'string' && !parseFloat(value)) || 
-        (typeof value === 'number' && (isNaN(value) || value <= 0))) {
-      
-      setErrors(prev => ({
-        ...prev,
-        [fieldName]: errorMessage
-      }));
-      return false;
-    }
-    return true;
   };
 
   // Validate the current step before proceeding
@@ -368,31 +508,16 @@ const AddHousePage: React.FC = () => {
           isValid = false;
         }
         
-        // Validate required files
-        if (!formData.object) {
-          newErrors.object = "3D rumah wajib diunggah";
-          isValid = false;
-        }
-        
-        if (!formData.houseImageFront) {
-          newErrors.houseImageFront = "Tampak depan wajib diunggah";
-          isValid = false;
-        }
-        
-        if (!formData.houseImageSide) {
-          newErrors.houseImageSide = "Tampak samping wajib diunggah";
-          isValid = false;
-        }
-        
-        if (!formData.houseImageBack) {
-          newErrors.houseImageBack = "Tampak belakang wajib diunggah";
-          isValid = false;
-        }
-        
-        // Validate floor plans based on floor count
-        if (formData.floor && Number(formData.floor) > 0) {
+        // Files validation is different for edit - they're not required if we already have them
+        // We only validate if the user selected a new number of floors but didn't upload all floorplans
+        if (modifiedFields.nonFileFields && 
+            formData.floor && 
+            Number(formData.floor) > originalHouseData.floor && 
+            formData.floorplans.length < Number(formData.floor)) {
+          // Check if we're missing any floorplans
           for (let i = 0; i < Number(formData.floor); i++) {
-            if (!formData.floorplans[i]) {
+            // Only validate new floorplans (original count to new count)
+            if (i >= originalHouseData.floor && !formData.floorplans[i]) {
               newErrors[`floorplans[${i}]`] = `Denah lantai ${i+1} wajib diunggah`;
               isValid = false;
             }
@@ -519,92 +644,93 @@ const AddHousePage: React.FC = () => {
       // Convert string values to numbers before submission
       const convertedFormData = prepareFormDataForSubmission();
       
-      // Parse budget ranges
-      const budget = parseBudgetRange(convertedFormData.budget);
-      const budget1 = parseBudgetRange(convertedFormData.budget1);
-      const budget2 = parseBudgetRange(convertedFormData.budget2);
-      
-      // Prepare JSON data for the initial API call
-      const initialData = {
-        houseNumber: convertedFormData.houseNumber,
-        landArea: convertedFormData.landArea,
-        buildingArea: convertedFormData.buildingArea,
-        buildingHeight: convertedFormData.buildingHeight,
-        style: convertedFormData.style,
-        floor: convertedFormData.floor,
-        rooms: convertedFormData.rooms,
-        designer: convertedFormData.designer,
-        defaultBudget: 1, // As specified, always set to 1
-        budgetMin: [budget.min, budget1.min, budget2.min],
-        budgetMax: [budget.max, budget1.max, budget2.max],
-        materials0: convertedFormData.materials0.filter(Boolean), // Filter out empty strings
-        materials1: convertedFormData.materials1.filter(Boolean),
-        materials2: convertedFormData.materials2.filter(Boolean)
-      };
-      
-      // Create FormData object for the API that expects FormData
-      const formDataToSend = new FormData();
-      
-      // Append all initial data fields
-      Object.entries(initialData).forEach(([key, value]) => {
-        if (Array.isArray(value)) {
-          // For arrays, use indexed notation
-          value.forEach((item, index) => {
-            formDataToSend.append(`${key}[${index}]`, item.toString());
+      // Step 1: Update non-file fields if they were modified
+      if (modifiedFields.nonFileFields) {
+        // Parse budget ranges
+        const budget = parseBudgetRange(convertedFormData.budget);
+        const budget1 = parseBudgetRange(convertedFormData.budget1);
+        const budget2 = parseBudgetRange(convertedFormData.budget2);
+        
+        // Create FormData for the PATCH API call
+        const formDataForPatch = new FormData();
+        
+        // Add regular fields
+        formDataForPatch.append('houseNumber', String(convertedFormData.houseNumber));
+        formDataForPatch.append('landArea', String(convertedFormData.landArea));
+        formDataForPatch.append('buildingArea', String(convertedFormData.buildingArea));
+        formDataForPatch.append('buildingHeight', String(convertedFormData.buildingHeight));
+        formDataForPatch.append('style', convertedFormData.style);
+        formDataForPatch.append('floor', String(convertedFormData.floor));
+        formDataForPatch.append('rooms', String(convertedFormData.rooms));
+        formDataForPatch.append('designer', convertedFormData.designer);
+        formDataForPatch.append('defaultBudget', String(originalHouseData.defaultBudget || 1));
+        
+        // Add array fields - budgets
+        for (let i = 0; i < 3; i++) {
+          const budgetMinValue = [budget.min, budget1.min, budget2.min][i];
+          const budgetMaxValue = [budget.max, budget1.max, budget2.max][i];
+          if (budgetMinValue) formDataForPatch.append(`budgetMin[${i}]`, String(budgetMinValue));
+          if (budgetMaxValue) formDataForPatch.append(`budgetMax[${i}]`, String(budgetMaxValue));
+        }
+        
+        // Add array fields - materials
+        const materialsArrays = [
+          convertedFormData.materials0.filter(Boolean),
+          convertedFormData.materials1.filter(Boolean),
+          convertedFormData.materials2.filter(Boolean)
+        ];
+        
+        materialsArrays.forEach((materialsArray, arrayIndex) => {
+          materialsArray.forEach((materialId: string | Blob, index: any) => {
+            formDataForPatch.append(`materials${arrayIndex}[${index}]`, materialId);
           });
-        } else if (value !== null && value !== undefined) {
-          formDataToSend.append(key, value.toString());
+        });
+        
+        console.log('Updating non-file fields with PATCH using FormData');
+        
+        const patchResponse = await fetch(`/api/rumah/${houseId}`, {
+          method: 'PATCH',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          body: formDataForPatch,
+        });
+        
+        if (!patchResponse.ok) {
+          if (patchResponse.status === 401 || patchResponse.status === 403) {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userData');
+            router.push('/login');
+            return;
+          }
+          const errorResponse = await patchResponse.json();
+          console.error('API Error:', errorResponse);
+          throw new Error(`Failed to update house data: ${errorResponse.error || patchResponse.statusText}`);
         }
-      });
-      
-      console.log('Sending initial data:', initialData);
-      
-      const initialResponse = await fetch('/api/rumah', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formDataToSend,
-      });
-      
-      if (!initialResponse.ok) {
-        if (initialResponse.status === 401 || initialResponse.status === 403) {
-          localStorage.removeItem('authToken');
-          localStorage.removeItem('userData');
-          router.push('/login');
-          return;
-        }
-        const errorResponse = await initialResponse.json();
-        console.error('API Error:', errorResponse);
-        throw new Error(`Failed to submit initial house data: ${errorResponse.error || initialResponse.statusText}`);
+        
+        console.log('Non-file fields updated successfully');
       }
       
-      const initialResult = await initialResponse.json();
-      const suggestionId = initialResult.data;
+      // Step 2: Upload files that were modified
       
-      if (!suggestionId) {
-        throw new Error('No suggestion ID returned from API');
-      }
-      
-      console.log('Initial house data submitted successfully, ID:', suggestionId);
-      
-      // Step 2: Upload floorplans if there are any
-      if (convertedFormData.floorplans.length > 0 && convertedFormData.floorplans.some((file: File | null) => file !== null)) {
+      // Handle floorplan uploads if modified
+      if (modifiedFields.floorplans && formData.floorplans.some(file => file !== null)) {
         const floorplanFormData = new FormData();
-        floorplanFormData.append('suggestionId', suggestionId);
+        floorplanFormData.append('suggestionId', houseId);
         
-        // Only append valid floorplans with proper naming
-        const validFloorplans = convertedFormData.floorplans.filter((file: File | null) => file !== null);
+        // Track which floors have new floorplans
+        const floorplanUpdates: number[] = [];
         
-        console.log(`Uploading ${validFloorplans.length} floorplans`);
-        
-        // Important: Use the same field name for each file (not array notation)
-        validFloorplans.forEach((file: File, index: number) => {
+        // Append files with the same field name 'floorplans' in order
+        formData.floorplans.forEach((file, index) => {
           if (file !== null) {
-            floorplanFormData.append('floorplans', file);
-            console.log(`Added floorplan ${index+1}: ${file.name} (${file.size} bytes)`);
+            floorplanFormData.append('floorplans', file); // Use consistent field name
+            floorplanUpdates.push(index);
+            console.log(`Added floorplan for floor ${index}: ${file.name}`);
           }
         });
+        
+        console.log(`Uploading ${floorplanUpdates.length} floorplans`);
         
         const floorplanResponse = await fetch('/api/rumah/upload-floorplans', {
           method: 'POST',
@@ -614,8 +740,6 @@ const AddHousePage: React.FC = () => {
           body: floorplanFormData,
         });
         
-        const floorplanResult = await floorplanResponse.json();
-        
         if (!floorplanResponse.ok) {
           if (floorplanResponse.status === 401 || floorplanResponse.status === 403) {
             localStorage.removeItem('authToken');
@@ -623,112 +747,78 @@ const AddHousePage: React.FC = () => {
             router.push('/login');
             return;
           }
-          console.error('Failed to upload floorplans:', floorplanResult);
-          // Continue with other uploads even if this fails
+          console.error('Failed to upload floorplans:', await floorplanResponse.json());
         } else {
-          console.log('Floorplans uploaded successfully:', floorplanResult);
+          console.log('Floorplans uploaded successfully');
         }
       }
       
-      // Step 3: Upload 3D house object if it exists
-      if (convertedFormData.object) {
-        const objectFormData = new FormData();
-        objectFormData.append('suggestionId', suggestionId);
-        objectFormData.append('file', convertedFormData.object);
-        objectFormData.append('type', 'house_object');
-        
-        console.log(`Uploading 3D object: ${convertedFormData.object.name} (${convertedFormData.object.size} bytes)`);
-        
-        const objectResponse = await fetch('/api/rumah/upload-file', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`
-          },
-          body: objectFormData,
-        });
-        
-        const objectResult = await objectResponse.json();
-        
-        if (!objectResponse.ok) {
-          if (objectResponse.status === 401 || objectResponse.status === 403) {
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('userData');
-            router.push('/login');
-            return;
-          }
-          console.error('Failed to upload house 3D object:', objectResult);
-        } else {
-          console.log('House 3D object uploaded successfully:', objectResult);
-        }
-      }
-      
-      // Step 4-6: Upload house images
-      const imageUploads = [
-        { field: 'houseImageFront', type: 'house_image_front' },
-        { field: 'houseImageSide', type: 'house_image_side' },
-        { field: 'houseImageBack', type: 'house_image_back' }
+      // Handle single file uploads if modified
+      const fileUploads = [
+        { field: 'object', modified: modifiedFields.object, type: 'house_object' },
+        { field: 'houseImageFront', modified: modifiedFields.houseImageFront, type: 'house_image_front' },
+        { field: 'houseImageSide', modified: modifiedFields.houseImageSide, type: 'house_image_side' },
+        { field: 'houseImageBack', modified: modifiedFields.houseImageBack, type: 'house_image_back' }
       ];
       
-      for (const upload of imageUploads) {
+      for (const upload of fileUploads) {
         const file = convertedFormData[upload.field] as File | null;
-        if (file) {
-          const imageFormData = new FormData();
-          imageFormData.append('suggestionId', suggestionId);
-          imageFormData.append('file', file);
-          imageFormData.append('type', upload.type);
+        if (upload.modified && file) {
+          const fileFormData = new FormData();
+          fileFormData.append('suggestionId', houseId);
+          fileFormData.append('file', file);
+          fileFormData.append('type', upload.type);
           
           console.log(`Uploading ${upload.type}: ${file.name} (${file.size} bytes)`);
           
-          const imageResponse = await fetch('/api/rumah/upload-file', {
+          const fileResponse = await fetch('/api/rumah/upload-file', {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${token}`
             },
-            body: imageFormData,
+            body: fileFormData,
           });
           
-          const imageResult = await imageResponse.json();
-          
-          if (!imageResponse.ok) {
-            if (imageResponse.status === 401 || imageResponse.status === 403) {
+          if (!fileResponse.ok) {
+            if (fileResponse.status === 401 || fileResponse.status === 403) {
               localStorage.removeItem('authToken');
               localStorage.removeItem('userData');
               router.push('/login');
               return;
             }
-            console.error(`Failed to upload ${upload.type}:`, imageResult);
+            console.error(`Failed to upload ${upload.type}:`, await fileResponse.json());
           } else {
-            console.log(`${upload.type} uploaded successfully:`, imageResult);
+            console.log(`${upload.type} uploaded successfully`);
           }
         }
       }
       
-      // All uploads completed, redirect to success page
+      // All updates completed, redirect to house listing page
       router.push('/rumah');
       
     } catch (error) {
-      console.error('Error submitting house data:', error);
-      alert('Terjadi kesalahan saat mengirim data rumah. Silakan coba lagi.');
+      console.error('Error updating house data:', error);
+      alert('Terjadi kesalahan saat memperbarui data rumah. Silakan coba lagi.');
     } finally {
       setIsSubmitting(false);
     }
   };
   
-  // Show loading message while fetching materials
+  // Show loading message while fetching data
   if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col">
         <NavigationBar />
         <div className="container mx-auto px-4 py-6 flex-1 flex justify-center items-center">
           <div className="text-center">
-            <p className="text-custom-olive-50 text-lg">Loading materials...</p>
+            <p className="text-custom-olive-50 text-lg">Loading house data...</p>
           </div>
         </div>
       </div>
     );
   }
   
-  // Show error message if fetching materials failed
+  // Show error message if fetching data failed
   if (error) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -737,9 +827,9 @@ const AddHousePage: React.FC = () => {
           <div className="text-center">
             <p className="text-red-500 mb-4">{error}</p>
             <Button
-              title='Try Again'
+              title='Back to Houses'
               variant='primary'
-              onPress={fetchMaterials}
+              onPress={() => router.push('/rumah')}
             />
           </div>
         </div>
@@ -758,6 +848,14 @@ const AddHousePage: React.FC = () => {
             handleFileChange={handleFileChange}
             errors={errors}
             setErrors={setErrors}
+            isEditing={true}
+            originalFiles={{
+              object: originalHouseData?.object || null,
+              houseImageFront: originalHouseData?.houseImageFront || null,
+              houseImageSide: originalHouseData?.houseImageSide || null,
+              houseImageBack: originalHouseData?.houseImageBack || null,
+              floorplans: originalHouseData?.floorplans || null
+            }}
           />
         );
       case 1:
@@ -776,7 +874,7 @@ const AddHousePage: React.FC = () => {
         );
       case 2:
         return (
-          <Step3Original 
+          <Step3Original
             formData={{
               budget1: formData.budget1,
               materials1: formData.materials1
@@ -789,7 +887,7 @@ const AddHousePage: React.FC = () => {
         );
       case 3:
         return (
-          <Step4Premium 
+          <Step4Premium
             formData={{
               budget2: formData.budget2,
               materials2: formData.materials2
@@ -826,7 +924,7 @@ const AddHousePage: React.FC = () => {
           )}
           
           {/* Page title */}
-          <H2 className="text-custom-green-500 mb-8">Tambah Rumah</H2>
+          <H2 className="text-custom-green-500 mb-8">Edit Rumah</H2>
           
           {/* Progress steps */}
           <ProgressSteps
@@ -856,4 +954,4 @@ const AddHousePage: React.FC = () => {
   );
 };
 
-export default AddHousePage;
+export default EditHousePage;

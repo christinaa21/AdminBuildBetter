@@ -58,7 +58,7 @@ const Rumah: React.FC = () => {
       id: suggestion.id,
       name: `Rumah ${suggestion.houseNumber}`,
       imageUrl: suggestion.houseImageFront || '/blank.png', // Use a placeholder if no image
-      size: `${suggestion.landArea}-${suggestion.buildingArea} m2`,
+      size: `LT ${suggestion.landArea} m2 / LB ${suggestion.buildingArea} m2`,
       style: suggestion.style,
       floors: suggestion.floor,
       bedrooms: suggestion.rooms
@@ -160,9 +160,18 @@ const Rumah: React.FC = () => {
           }
         });
         
-        const result = await response.json();
+        // Handle possible empty responses
+        let result;
+        try {
+          const text = await response.text();
+          result = text ? JSON.parse(text) : { code: response.status };
+        } catch (e) {
+          console.warn('Failed to parse JSON response:', e);
+          // Fallback to using HTTP status
+          result = { code: response.status };
+        }
         
-        if (response.ok && result.code === 200) {
+        if (response.ok) {
           // Filter out the deleted house from the houses array
           setHouses(houses.filter(house => house.id !== houseToDelete));
           closeDeleteModal();
@@ -172,7 +181,7 @@ const Rumah: React.FC = () => {
           localStorage.removeItem('userData');
           router.push('/login');
         } else {
-          setError('Failed to delete house. Please try again later.');
+          setError(`Failed to delete house (${response.status}). Please try again later.`);
         }
       } catch (error) {
         console.error('Error deleting house:', error);

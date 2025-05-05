@@ -6,8 +6,6 @@ interface Material {
   name: string;
   category: string;
   subcategory: string;
-  priceRange: string;
-  description?: string;
 }
 
 // Define the props interface

@@ -20,6 +20,14 @@ interface Step1GeneralProps {
   handleFileChange: (fieldName: string, files: FileList | null) => void;
   errors: Record<string, string>;
   setErrors: React.Dispatch<React.SetStateAction<Record<string, string>>>;
+  isEditing?: boolean;
+  originalFiles?: {
+    object: string | null;
+    houseImageFront: string | null;
+    houseImageSide: string | null;
+    houseImageBack: string | null;
+    floorplans: string[] | null;
+  };
 }
 
 const Step1General: React.FC<Step1GeneralProps> = ({ 
@@ -27,7 +35,9 @@ const Step1General: React.FC<Step1GeneralProps> = ({
   handleChange, 
   handleFileChange, 
   errors, 
-  setErrors 
+  setErrors,
+  isEditing = false,
+  originalFiles 
 }) => {
   // Simplified numeric input handler
   const handleNumericChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -80,31 +90,97 @@ const Step1General: React.FC<Step1GeneralProps> = ({
     if (!formData.rooms) newErrors.rooms = "Jumlah kamar wajib dipilih";
     if (!formData.designer) newErrors.designer = "Nama arsitek wajib diisi";
     
-    // Check required file fields
-    if (!formData.object) newErrors.object = "3D rumah wajib diunggah";
-    if (!formData.houseImageFront) newErrors.houseImageFront = "Tampak depan wajib diunggah";
-    if (!formData.houseImageSide) newErrors.houseImageSide = "Tampak samping wajib diunggah";
-    if (!formData.houseImageBack) newErrors.houseImageBack = "Tampak belakang wajib diunggah";
-    
+    // File validations modified for edit mode
+    if (!isEditing) {
+      if (!formData.object) newErrors.object = "3D rumah wajib diunggah";
+      if (!formData.houseImageFront) newErrors.houseImageFront = "Tampak depan wajib diunggah";
+      if (!formData.houseImageSide) newErrors.houseImageSide = "Tampak samping wajib diunggah";
+      if (!formData.houseImageBack) newErrors.houseImageBack = "Tampak belakang wajib diunggah";
+    } else {
+      // For edit mode, only validate if both original and new file are missing
+      if (!originalFiles?.object && !formData.object) newErrors.object = "3D rumah wajib diunggah";
+      if (!originalFiles?.houseImageFront && !formData.houseImageFront) newErrors.houseImageFront = "Tampak depan wajib diunggah";
+      if (!originalFiles?.houseImageSide && !formData.houseImageSide) newErrors.houseImageSide = "Tampak samping wajib diunggah";
+      if (!originalFiles?.houseImageBack && !formData.houseImageBack) newErrors.houseImageBack = "Tampak belakang wajib diunggah";
+    }
+
     // Check floor plans based on floor count
     if (formData.floor && Number(formData.floor) > 0) {
       for (let i = 0; i < Number(formData.floor); i++) {
-        if (!formData.floorplans[i]) {
+        const hasOriginal = originalFiles?.floorplans?.[i];
+        const hasNew = formData.floorplans[i];
+        
+        if (!hasOriginal && !hasNew) {
           newErrors[`floorplans[${i}]`] = `Denah lantai ${i+1} wajib diunggah`;
         }
       }
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  // Validate on floor count change
+  // Modified file display logic
+  const getFileName = (field: 'object' | 'houseImageFront' | 'houseImageSide' | 'houseImageBack'): string => {
+    if (formData[field]) return (formData[field] as File).name;
+    if (isEditing && originalFiles?.[field]) return originalFiles[field]!.split('/').pop() || '';
+    return "Unggah disini";
+  };  
+
+  // Modified floorplan display logic
+  const getFloorplanName = (index: number): string => {
+    if (formData.floorplans[index]) return formData.floorplans[index]!.name;
+    if (isEditing && originalFiles?.floorplans?.[index]) 
+      return originalFiles.floorplans[index]!.split('/').pop() || '';
+    return "Unggah disini";
+  };
+
+  // Modified to only validate floor plan fields when floor count changes
   useEffect(() => {
     if (formData.floor) {
-      validate();
+      // Only validate floor plan fields, not the entire form
+      validateFloorPlans();
     }
   }, [formData.floor]);
+
+  // New function to validate only floor plans
+  const validateFloorPlans = () => {
+    if (!formData.floor || Number(formData.floor) <= 0) return;
+    
+    const newErrors = {...errors};
+    
+    // Clear any existing floor plan errors first
+    Object.keys(newErrors).forEach(key => {
+      if (key.startsWith('floorplans[')) {
+        delete newErrors[key];
+      }
+    });
+    
+    // Add errors for missing floor plans
+    for (let i = 0; i < Number(formData.floor); i++) {
+      const hasOriginal = originalFiles?.floorplans?.[i];
+      const hasNew = formData.floorplans[i];
+      
+      if (!hasOriginal && !hasNew) {
+        newErrors[`floorplans[${i}]`] = `Denah lantai ${i+1} wajib diunggah`;
+      }
+    }
+    
+    setErrors(newErrors);
+  };
+
+  // Custom function to handle floorplan updates properly
+  const handleFloorplanChange = (index: number, files: FileList | null) => {
+    if (files && files.length > 0) {
+      // Extract the floorplan index from the field name
+      const newErrors = {...errors};
+      delete newErrors[`floorplans[${index}]`];
+      setErrors(newErrors);
+      
+      // Now call the parent's handleFileChange with the correctly formatted field name
+      handleFileChange(`floorplans[${index}]`, files);
+    }
+  };
 
   // Create floor plan upload fields based on floor count
   const renderFloorPlanUploads = () => {
@@ -122,22 +198,13 @@ const Step1General: React.FC<Step1GeneralProps> = ({
           </label>
           <label className={`w-full flex items-center justify-between border ${errors[`floorplans[${i}]`] ? 'border-red-500' : 'border-gray-200'} rounded-md px-4 py-3 text-custom-green-300 cursor-pointer`}>
             <span>
-              {formData.floorplans && formData.floorplans[i] 
-                ? formData.floorplans[i]?.name 
-                : "Unggah disini"}
+              {getFloorplanName(i)}
             </span>
             <input
               type="file"
               name={`floorplans[${i}]`}
               accept="image/*"
-              onChange={(e) => {
-                handleFileChange(`floorplans[${i}]`, e.target.files);
-                if (e.target.files && e.target.files.length > 0) {
-                  const newErrors = {...errors};
-                  delete newErrors[`floorplans[${i}]`];
-                  setErrors(newErrors);
-                }
-              }}
+              onChange={(e) => handleFloorplanChange(i, e.target.files)}
               className="hidden"
             />
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-custom-green-300">
@@ -241,10 +308,10 @@ const Step1General: React.FC<Step1GeneralProps> = ({
             className={`w-full border ${errors.style ? 'border-red-500' : 'border-gray-200'} rounded-md px-4 py-3 focus:outline-none focus:ring-1 focus:ring-custom-green-300 appearance-none`}
           >
             <option value="" disabled>Pilih disini</option>
-            <option value="modern">Modern</option>
-            <option value="minimalis">Skandinavia</option>
-            <option value="industrial">Industrialis</option>
-            <option value="classic">Klasik</option>
+            <option value="Modern">Modern</option>
+            <option value="Skandinavia">Skandinavia</option>
+            <option value="Industrialis">Industrialis</option>
+            <option value="Klasik">Klasik</option>
           </select>
           <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
             <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -333,7 +400,7 @@ const Step1General: React.FC<Step1GeneralProps> = ({
         </label>
         <label className={`w-full flex items-center justify-between border ${errors.object ? 'border-red-500' : 'border-gray-200'} rounded-md px-4 py-3 text-custom-green-300 cursor-pointer`}>
           <span>
-            {formData.object ? formData.object.name : "Unggah disini"}
+            {getFileName('object')}
           </span>
           <input
             type="file"
@@ -365,7 +432,7 @@ const Step1General: React.FC<Step1GeneralProps> = ({
         </label>
         <label className={`w-full flex items-center justify-between border ${errors.houseImageFront ? 'border-red-500' : 'border-gray-200'} rounded-md px-4 py-3 text-custom-green-300 cursor-pointer`}>
           <span>
-            {formData.houseImageFront ? formData.houseImageFront.name : "Unggah disini"}
+            {getFileName('houseImageFront')}
           </span>
           <input
             type="file"
@@ -397,7 +464,7 @@ const Step1General: React.FC<Step1GeneralProps> = ({
         </label>
         <label className={`w-full flex items-center justify-between border ${errors.houseImageSide ? 'border-red-500' : 'border-gray-200'} rounded-md px-4 py-3 text-custom-green-300 cursor-pointer`}>
           <span>
-            {formData.houseImageSide ? formData.houseImageSide.name : "Unggah disini"}
+            {getFileName('houseImageSide')}
           </span>
           <input
             type="file"
@@ -429,7 +496,7 @@ const Step1General: React.FC<Step1GeneralProps> = ({
         </label>
         <label className={`w-full flex items-center justify-between border ${errors.houseImageBack ? 'border-red-500' : 'border-gray-200'} rounded-md px-4 py-3 text-custom-green-300 cursor-pointer`}>
           <span>
-            {formData.houseImageBack ? formData.houseImageBack.name : "Unggah disini"}
+            {getFileName('houseImageBack')}
           </span>
           <input
             type="file"
