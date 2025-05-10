@@ -14,6 +14,7 @@ interface Step1GeneralProps {
     houseImageSide: File | null;
     houseImageBack: File | null;
     floorplans: Array<File | null>;
+    pdf: File | null;
     designer: string;
   };
   handleChange: (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
@@ -27,6 +28,7 @@ interface Step1GeneralProps {
     houseImageSide: string | null;
     houseImageBack: string | null;
     floorplans: string[] | null;
+    pdf: string | null;
   };
 }
 
@@ -63,7 +65,7 @@ const Step1General: React.FC<Step1GeneralProps> = ({
   };
 
   // Modified file display logic
-  const getFileName = (field: 'object' | 'houseImageFront' | 'houseImageSide' | 'houseImageBack'): string => {
+  const getFileName = (field: 'object' | 'houseImageFront' | 'houseImageSide' | 'houseImageBack' | 'pdf'): string => {
     if (formData[field]) return (formData[field] as File).name;
     if (isEditing && originalFiles?.[field]) return originalFiles[field]!.split('/').pop() || '';
     return "Unggah disini";
@@ -474,6 +476,38 @@ const Step1General: React.FC<Step1GeneralProps> = ({
 
       {/* Dynamic Floor Plans based on number of floors */}
       {renderFloorPlanUploads()}
+      
+      {/* PDF Desain Rumah*/}
+      <div className="mb-6">
+        <label className="block text-custom-green-400 mb-2">
+          PDF Desain Rumah
+          {errors.pdf && <span className="text-red-500 text-sm ml-2">*{errors.pdf}</span>}
+        </label>
+        <label className={`w-full flex items-center justify-between border ${errors.pdf ? 'border-red-500' : 'border-gray-200'} rounded-md px-4 py-3 text-custom-green-300 cursor-pointer`}>
+          <span>
+            {getFileName('pdf')}
+          </span>
+          <input
+            type="file"
+            name="pdf"
+            accept=".pdf"
+            onChange={(e) => {
+              handleFileChange('pdf', e.target.files);
+              if (e.target.files && e.target.files.length > 0) {
+                const newErrors = {...errors};
+                delete newErrors.pdf;
+                setErrors(newErrors);
+              }
+            }}
+            className="hidden"
+          />
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-custom-green-300">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+        </label>
+      </div>
 
       {/* Architect Name */}
       <div className="mb-6">

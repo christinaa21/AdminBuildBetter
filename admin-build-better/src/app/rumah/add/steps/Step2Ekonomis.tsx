@@ -23,7 +23,7 @@ interface MaterialCategory {
 interface Step2EkonomisProps {
   formData: {
     budget: string;
-    materials0: string[];
+    materials0: string[];  // Keep as string[] - will store comma-separated values
   };
   handleChange: (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
   errors: Record<string, string>;
@@ -55,6 +55,7 @@ const Step2Ekonomis: React.FC<Step2EkonomisProps> = ({
   setMaterials
 }) => {
   const [loading, setLoading] = useState<boolean>(false);
+  
   // Fetch materials if they haven't been loaded yet
   useEffect(() => {
     const fetchMaterials = async () => {
@@ -93,23 +94,48 @@ const Step2Ekonomis: React.FC<Step2EkonomisProps> = ({
     );
   };
 
-  // Custom handle change function with direct access to formData
-  const handleMaterialChange = (e: React.ChangeEvent<HTMLSelectElement>) => {    
-    // Call the parent's handleChange function
-    handleChange(e);
+  // Helper to get current selected values as array
+  const getCurrentValues = (index: number): string[] => {
+    const value = formData.materials0[index] || '';
+    return value ? value.split(',') : [];
+  };
+
+  // Handle checkbox change for materials
+  const handleCheckboxChange = (index: number, materialId: string, checked: boolean) => {
+    const currentValues = getCurrentValues(index);
     
-    // Clear error for this field if it exists
-    if (e.target.value && e.target.name.startsWith('materials0[')) {
-      const index = e.target.name.match(/\[(\d+)\]/)?.[1];
-      if (index) {
-        const matchingCategory = materialCategories.find(item => item.index === parseInt(index));
-        if (matchingCategory) {
-          const errorKey = `materials0_${matchingCategory.subcategory.replace(/\s+/g, '')}`;
-          if (errors[errorKey]) {
-            const newErrors = {...errors};
-            delete newErrors[errorKey];
-            setErrors(newErrors);
-          }
+    let newValues: string[];
+    if (checked) {
+      // Add the value if it's not already in the array
+      newValues = [...currentValues, materialId].filter((v, i, a) => a.indexOf(v) === i);
+    } else {
+      // Remove the value
+      newValues = currentValues.filter(id => id !== materialId);
+    }
+    
+    // Join the values and create a synthetic event
+    const valueToSend = newValues.join(',');
+    const fieldName = `materials0[${index}]`;
+    
+    const syntheticEvent = {
+      target: {
+        name: fieldName,
+        value: valueToSend
+      }
+    } as unknown as React.ChangeEvent<HTMLInputElement>;
+    
+    // Call the parent's handleChange function
+    handleChange(syntheticEvent);
+    
+    // Clear error for this field if there are selections
+    if (newValues.length > 0) {
+      const matchingCategory = materialCategories.find(item => item.index === index);
+      if (matchingCategory) {
+        const errorKey = `materials0_${matchingCategory.subcategory.replace(/\s+/g, '')}`;
+        if (errors[errorKey]) {
+          const newErrors = {...errors};
+          delete newErrors[errorKey];
+          setErrors(newErrors);
         }
       }
     }
@@ -147,7 +173,7 @@ const Step2Ekonomis: React.FC<Step2EkonomisProps> = ({
         />
       </div>
       
-      {/* Materials Dropdowns */}
+      {/* Materials Checkboxes */}
       {loading ? (
         <div className="text-center py-4">Loading materials...</div>
       ) : (
@@ -163,8 +189,8 @@ const Step2Ekonomis: React.FC<Step2EkonomisProps> = ({
                 .map((item) => {
                   const errorKey = `materials0_${item.subcategory.replace(/\s+/g, '')}`;
                   const materialOptions = getMaterialOptions(item.category, item.subcategory);
-                  const fieldName = `materials0[${item.index}]`;
-                  const currentValue = formData.materials0[item.index] || '';
+                  const index = item.index;
+                  const currentValues = getCurrentValues(index);
                   
                   return (
                     <div className="mb-6" key={`${item.category}-${item.subcategory}`}>
@@ -172,25 +198,31 @@ const Step2Ekonomis: React.FC<Step2EkonomisProps> = ({
                         {item.subcategory}
                         {errors[errorKey] && <span className="text-red-500 text-sm ml-2">*{errors[errorKey]}</span>}
                       </label>
-                      <div className="relative">
-                        <select
-                          name={fieldName}
-                          value={currentValue}
-                          onChange={handleMaterialChange}
-                          className={`w-full border ${errors[errorKey] ? 'border-red-500' : 'border-gray-200'} rounded-md px-4 py-3 focus:outline-none focus:ring-1 focus:ring-custom-green-300 appearance-none`}
-                        >
-                          <option value="">Pilih disini</option>
-                          {materialOptions.map((material) => (
-                            <option key={material.id} value={material.id}>
-                              {material.name}
-                            </option>
-                          ))}
-                        </select>
-                        <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
-                          </svg>
-                        </div>
+                      
+                      <div className={`border ${errors[errorKey] ? 'border-red-500' : 'border-gray-200'} rounded-md p-3 max-h-64 overflow-y-auto`}>
+                        {materialOptions.length === 0 ? (
+                          <p className="text-gray-500 text-sm">No materials available</p>
+                        ) : (
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                            {materialOptions.map((material) => (
+                              <div key={material.id} className="flex items-center">
+                                <input
+                                  type="checkbox"
+                                  id={`material-${index}-${material.id}`}
+                                  checked={currentValues.includes(material.id)}
+                                  onChange={(e) => handleCheckboxChange(index, material.id, e.target.checked)}
+                                  className="mr-2 h-4 w-4 accent-custom-green-200 border-gray-300 rounded"
+                                />
+                                <label 
+                                  htmlFor={`material-${index}-${material.id}`}
+                                  className="text-gray-700 text-md cursor-pointer"
+                                >
+                                  {material.name}
+                                </label>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
                   );

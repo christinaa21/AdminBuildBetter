@@ -50,6 +50,7 @@ interface FormData {
   houseImageSide: File | null;
   houseImageBack: File | null;
   floorplans: Array<File | null>;
+  pdf: File | null;
   designer: string;
   
   // Step 2: Ekonomis
@@ -95,6 +96,7 @@ const AddHousePage: React.FC = () => {
     houseImageFront: null,
     houseImageSide: null,
     houseImageBack: null,
+    pdf: null,
     floorplans: [],
     designer: '',
     
@@ -216,8 +218,8 @@ const AddHousePage: React.FC = () => {
         
         setFormData(prev => {
           // Create a copy of the specific array
-          const newArray = [...prev[arrayName as keyof FormData] as string[]];
-          // Update the value at the specified index
+          const newArray = [...prev[arrayName as keyof FormData] as any[]];
+          // Update the value at the specified index - now value can be an array or string
           newArray[index] = value;
           
           return {
@@ -484,6 +486,32 @@ const AddHousePage: React.FC = () => {
         convertedData[field] = parseFloat(String(convertedData[field]));
       }
     });
+
+    // Process material arrays to ensure all IDs are in a flat array
+    ['materials0', 'materials1', 'materials2'].forEach(materialField => {
+      const materialArray = convertedData[materialField];
+      if (Array.isArray(materialArray)) {
+        const flattenedMaterials: string[] = [];
+        
+        materialArray.forEach(item => {
+          if (Array.isArray(item)) {
+            // If the item is an array, add all elements
+            flattenedMaterials.push(...item);
+          } else if (typeof item === 'string') {
+            if (item.includes(',')) {
+              // If it's a comma-separated string (legacy format), split and add each part
+              flattenedMaterials.push(...item.split(',').filter(Boolean));
+            } else if (item) {
+              // If it's a single ID, add it
+              flattenedMaterials.push(item);
+            }
+          }
+        });
+        
+        // Replace the original array with the flattened one
+        convertedData[materialField] = flattenedMaterials.filter(Boolean);
+      }
+    });
     
     return convertedData;
   };
@@ -688,6 +716,38 @@ const AddHousePage: React.FC = () => {
         }
       }
       
+      // Step 7: Upload pdf if it exists
+      if (convertedFormData.pdf) {
+        const pdfFormData = new FormData();
+        pdfFormData.append('suggestionId', suggestionId);
+        pdfFormData.append('file', convertedFormData.pdf);
+        pdfFormData.append('type', 'pdf');
+        
+        console.log(`Uploading house design pdf: ${convertedFormData.pdf.name} (${convertedFormData.pdf.size} bytes)`);
+        
+        const pdfResponse = await fetch('/api/rumah/upload-file', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          body: pdfFormData,
+        });
+        
+        const pdfResult = await pdfResponse.json();
+        
+        if (!pdfResponse.ok) {
+          if (pdfResponse.status === 401 || pdfResponse.status === 403) {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userData');
+            router.push('/login');
+            return;
+          }
+          console.error('Failed to upload house design pdf:', pdfResult);
+        } else {
+          console.log('House design pdf uploaded successfully:', pdfResult);
+        }
+      }
+
       // All uploads completed, redirect to success page
       router.push('/rumah');
       

@@ -11,10 +11,10 @@ import ProgressSteps from '@/components/ProgressSteps';
 import NavigationBar from '@/components/NavigationBar';
 
 // Step components - reused from AddHousePage
-import Step1General from '../../add/steps/Step1General';
-import Step2Ekonomis from '../../add/steps/Step2Ekonomis';
-import Step3Original from '../../add/steps/Step3Original';
-import Step4Premium from '../../add/steps/Step4Premium';
+import Step1General from '../steps/Step1General';
+import Step2Ekonomis from '../steps/Step2Ekonomis';
+import Step3Original from '../steps/Step3Original';
+import Step4Premium from '../steps/Step4Premium';
 
 // Define Material interface
 interface Material {
@@ -50,6 +50,7 @@ interface FormData {
   houseImageSide: File | null;
   houseImageBack: File | null;
   floorplans: Array<File | null>;
+  pdf: File | null;
   designer: string;
   
   // Step 2: Ekonomis
@@ -73,6 +74,7 @@ interface ModifiedFields {
   houseImageSide: boolean;
   houseImageBack: boolean;
   floorplans: boolean;
+  pdf: boolean;
 }
 
 const EditHousePage: React.FC = () => {
@@ -105,7 +107,8 @@ const EditHousePage: React.FC = () => {
     houseImageFront: false,
     houseImageSide: false,
     houseImageBack: false,
-    floorplans: false
+    floorplans: false,
+    pdf: false,
   });
 
   // Main form state - all fields from all steps
@@ -123,6 +126,7 @@ const EditHousePage: React.FC = () => {
     houseImageSide: null,
     houseImageBack: null,
     floorplans: [],
+    pdf: null,
     designer: '',
     
     // Step 2: Ekonomis
@@ -206,6 +210,7 @@ const EditHousePage: React.FC = () => {
           houseImageSide: null,
           houseImageBack: null,
           floorplans: Array(houseData.floor || 0).fill(null),
+          pdf: null,
           designer: houseData.designer,
           budget: budgets.budget,
           materials0: materials0,
@@ -239,23 +244,27 @@ const EditHousePage: React.FC = () => {
     
     if (!materialsObj) return Array(10).fill('');
 
-    // Iterate through categories and subcategories to extract material IDs
+    // Iterate through categories
     Object.keys(materialsObj).forEach(category => {
+      // Iterate through subcategories
       Object.keys(materialsObj[category]).forEach(subCategory => {
-        const material = materialsObj[category][subCategory];
-        if (material && material.id) {
-          materialIds.push(material.id);
+        // Check if it's an array of materials
+        const materials = materialsObj[category][subCategory];
+        if (Array.isArray(materials)) {
+          // Handle multiple materials per subcategory
+          materials.forEach(material => {
+            if (material && material.id) {
+              materialIds.push(material.id);
+            }
+          });
+        } else if (materials && materials.id) {
+          // Handle single material object (legacy format)
+          materialIds.push(materials.id);
         }
       });
     });
 
-    // Ensure we have 10 slots (padded with empty strings if needed)
-    const paddedIds = [...materialIds];
-    while (paddedIds.length < 10) {
-      paddedIds.push('');
-    }
-
-    return paddedIds;
+    return materialIds;
   };
 
   // Fetch materials data when component mounts using useCallback for proper dependency management
@@ -341,8 +350,8 @@ const EditHousePage: React.FC = () => {
         
         setFormData(prev => {
           // Create a copy of the specific array
-          const newArray = [...prev[arrayName as keyof FormData] as string[]];
-          // Update the value at the specified index
+          const newArray = [...prev[arrayName as keyof FormData] as any[]];
+          // Update the value at the specified index - now value can be an array or string
           newArray[index] = value;
           
           return {
@@ -625,6 +634,32 @@ const EditHousePage: React.FC = () => {
         convertedData[field] = parseFloat(String(convertedData[field]));
       }
     });
+
+    // Process material arrays to ensure all IDs are in a flat array
+    ['materials0', 'materials1', 'materials2'].forEach(materialField => {
+      const materialArray = convertedData[materialField];
+      if (Array.isArray(materialArray)) {
+        const flattenedMaterials: string[] = [];
+        
+        materialArray.forEach(item => {
+          if (Array.isArray(item)) {
+            // If the item is an array, add all elements
+            flattenedMaterials.push(...item);
+          } else if (typeof item === 'string') {
+            if (item.includes(',')) {
+              // If it's a comma-separated string (legacy format), split and add each part
+              flattenedMaterials.push(...item.split(',').filter(Boolean));
+            } else if (item) {
+              // If it's a single ID, add it
+              flattenedMaterials.push(item);
+            }
+          }
+        });
+        
+        // Replace the original array with the flattened one
+        convertedData[materialField] = flattenedMaterials.filter(Boolean);
+      }
+    });
     
     return convertedData;
   };
@@ -759,7 +794,8 @@ const EditHousePage: React.FC = () => {
         { field: 'object', modified: modifiedFields.object, type: 'house_object' },
         { field: 'houseImageFront', modified: modifiedFields.houseImageFront, type: 'house_image_front' },
         { field: 'houseImageSide', modified: modifiedFields.houseImageSide, type: 'house_image_side' },
-        { field: 'houseImageBack', modified: modifiedFields.houseImageBack, type: 'house_image_back' }
+        { field: 'houseImageBack', modified: modifiedFields.houseImageBack, type: 'house_image_back' },
+        { field: 'pdf', modified: modifiedFields.pdf, type: 'pdf' }
       ];
       
       for (const upload of fileUploads) {
@@ -855,7 +891,8 @@ const EditHousePage: React.FC = () => {
               houseImageFront: originalHouseData?.houseImageFront || null,
               houseImageSide: originalHouseData?.houseImageSide || null,
               houseImageBack: originalHouseData?.houseImageBack || null,
-              floorplans: originalHouseData?.floorplans || null
+              floorplans: originalHouseData?.floorplans || null,
+              pdf: originalHouseData?.pdf || null,
             }}
           />
         );

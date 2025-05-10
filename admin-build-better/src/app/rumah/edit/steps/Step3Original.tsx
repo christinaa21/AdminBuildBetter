@@ -52,33 +52,31 @@ const Step3Original: React.FC<Step3OriginalProps> = ({
     );
   };
 
-  // Helper to get current selected values as array
-  const getCurrentValues = (index: number): string[] => {
-    const value = formData.materials1[index] || '';
-    return value ? value.split(',') : [];
+  // Check if a material ID is selected in the form data for a specific index
+  const isMaterialSelected = (index: number, materialId: string): boolean => {
+    return formData.materials1.includes(materialId);
   };
 
   // Handle checkbox change for materials
-  const handleCheckboxChange = (index: number, materialId: string, checked: boolean) => {
-    const currentValues = getCurrentValues(index);
+  const handleCheckboxChange = (materialId: string, checked: boolean) => {
+    // Create a copy of the current materials array
+    let newMaterials = [...formData.materials1];
     
-    let newValues: string[];
     if (checked) {
       // Add the value if it's not already in the array
-      newValues = [...currentValues, materialId].filter((v, i, a) => a.indexOf(v) === i);
+      if (!newMaterials.includes(materialId)) {
+        newMaterials.push(materialId);
+      }
     } else {
       // Remove the value
-      newValues = currentValues.filter(id => id !== materialId);
+      newMaterials = newMaterials.filter(id => id !== materialId);
     }
     
-    // Join the values and create a synthetic event
-    const valueToSend = newValues.join(',');
-    const fieldName = `materials1[${index}]`;
-    
+    // Create a synthetic event
     const syntheticEvent = {
       target: {
-        name: fieldName,
-        value: valueToSend
+        name: 'materials1',
+        value: newMaterials
       }
     } as unknown as React.ChangeEvent<HTMLInputElement>;
     
@@ -86,15 +84,12 @@ const Step3Original: React.FC<Step3OriginalProps> = ({
     handleChange(syntheticEvent);
     
     // Clear error for this field if there are selections
-    if (newValues.length > 0) {
-      const matchingCategory = materialCategories.find(item => item.index === index);
-      if (matchingCategory) {
-        const errorKey = `materials1_${matchingCategory.subcategory.replace(/\s+/g, '')}`;
-        if (errors[errorKey]) {
-          const newErrors = {...errors};
-          delete newErrors[errorKey];
-          setErrors(newErrors);
-        }
+    if (newMaterials.length > 0) {
+      const errorKeys = Object.keys(errors).filter(key => key.startsWith('materials1_'));
+      if (errorKeys.length > 0) {
+        const newErrors = {...errors};
+        errorKeys.forEach(key => delete newErrors[key]);
+        setErrors(newErrors);
       }
     }
   };
@@ -104,9 +99,9 @@ const Step3Original: React.FC<Step3OriginalProps> = ({
     handleChange(e);
     
     // Clear error if value is provided
-    if (e.target.value && errors.budget1) {
+    if (e.target.value && errors.budget) {
       const newErrors = {...errors};
-      delete newErrors.budget1;
+      delete newErrors.budget;
       setErrors(newErrors);
     }
   };
@@ -147,8 +142,6 @@ const Step3Original: React.FC<Step3OriginalProps> = ({
                 .map((item) => {
                   const errorKey = `materials1_${item.subcategory.replace(/\s+/g, '')}`;
                   const materialOptions = getMaterialOptions(item.category, item.subcategory);
-                  const index = item.index;
-                  const currentValues = getCurrentValues(index);
                   
                   return (
                     <div className="mb-6" key={`${item.category}-${item.subcategory}`}>
@@ -166,13 +159,13 @@ const Step3Original: React.FC<Step3OriginalProps> = ({
                               <div key={material.id} className="flex items-center">
                                 <input
                                   type="checkbox"
-                                  id={`material1-${index}-${material.id}`}
-                                  checked={currentValues.includes(material.id)}
-                                  onChange={(e) => handleCheckboxChange(index, material.id, e.target.checked)}
+                                  id={`material1-${material.id}`}
+                                  checked={isMaterialSelected(item.index, material.id)}
+                                  onChange={(e) => handleCheckboxChange(material.id, e.target.checked)}
                                   className="mr-2 h-4 w-4 accent-custom-green-200 border-gray-300 rounded"
                                 />
                                 <label 
-                                  htmlFor={`material1-${index}-${material.id}`}
+                                  htmlFor={`material1-${material.id}`}
                                   className="text-gray-700 text-md cursor-pointer"
                                 >
                                   {material.name}
