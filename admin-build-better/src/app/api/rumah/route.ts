@@ -71,6 +71,7 @@ export async function POST(request: NextRequest) {
             rooms: 0,
             designer: "",
             defaultBudget: 1,
+            windDirection: "west",
             budgetMin: [],
             budgetMax: [],
             materials0: [],
