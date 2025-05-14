@@ -45,6 +45,7 @@ interface FormData {
   style: string;
   floor: number | string;
   rooms: number | string;
+  windDirection: string[];
   object: File | null;
   houseImageFront: File | null;
   houseImageSide: File | null;
@@ -121,6 +122,7 @@ const EditHousePage: React.FC = () => {
     style: '',
     floor: '',
     rooms: '',
+    windDirection: [],
     object: null,
     houseImageFront: null,
     houseImageSide: null,
@@ -205,6 +207,7 @@ const EditHousePage: React.FC = () => {
           style: houseData.style,
           floor: houseData.floor,
           rooms: houseData.rooms,
+          windDirection: houseData.windDirection,
           object: null, // File objects will be null initially since we only have URLs
           houseImageFront: null,
           houseImageSide: null,
@@ -517,6 +520,11 @@ const EditHousePage: React.FC = () => {
           newErrors.rooms = "Jumlah kamar wajib dipilih";
           isValid = false;
         }
+
+        if (!formData.windDirection) {
+          newErrors.windDirection = "Arah mata angin wajib dipilih";
+          isValid = false;
+        }
         
         // Files validation is different for edit - they're not required if we already have them
         // We only validate if the user selected a new number of floors but didn't upload all floorplans
@@ -698,6 +706,9 @@ const EditHousePage: React.FC = () => {
         formDataForPatch.append('style', convertedFormData.style);
         formDataForPatch.append('floor', String(convertedFormData.floor));
         formDataForPatch.append('rooms', String(convertedFormData.rooms));
+        convertedFormData.windDirection.forEach((direction: string, index: number) => {
+          formDataForPatch.append(`windDirection[${index}]`, direction);
+        });
         formDataForPatch.append('designer', convertedFormData.designer);
         formDataForPatch.append('defaultBudget', String(originalHouseData.defaultBudget || 1));
         

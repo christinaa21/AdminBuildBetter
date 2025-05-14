@@ -28,6 +28,7 @@ interface ApiSuggestion {
   style: string;
   floor: number;
   rooms: number;
+  windDirection: string[];
   buildingHeight: number;
   designer: string;
   defaultBudget: number;

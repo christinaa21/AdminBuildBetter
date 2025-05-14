@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
         });
        
         // Forward to the actual API endpoint
-        const response = await fetch('http://54.153.132.144:8080/api/v1/suggestions/upload-floorplans', {
+        const response = await fetch('https://build-better.site/api/v1/suggestions/upload-floorplans', {
             method: 'POST',
             headers: {
                 ...(authHeader ? { 'Authorization': authHeader } : {})

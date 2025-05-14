@@ -9,6 +9,7 @@ interface Step1GeneralProps {
     style: string;
     floor: number | string;
     rooms: number | string;
+    windDirection: string[];
     object: File | null;
     houseImageFront: File | null;
     houseImageSide: File | null;
@@ -192,6 +193,46 @@ const Step1General: React.FC<Step1GeneralProps> = ({
     return uploads;
   };
 
+  // New function to handle checkbox change for wind direction
+  const handleWindDirectionChange = (direction: string, checked: boolean) => {
+    const currentDirections = [...formData.windDirection];
+    
+    let newDirections: string[];
+    if (checked) {
+      // Add the direction if it's not already in the array
+      newDirections = [...currentDirections, direction].filter((v, i, a) => a.indexOf(v) === i);
+    } else {
+      // Remove the direction
+      newDirections = currentDirections.filter(d => d !== direction);
+    }
+    
+    // Create a synthetic event to update the formData
+    const syntheticEvent = {
+      target: {
+        name: 'windDirection',
+        value: newDirections
+      }
+    } as unknown as React.ChangeEvent<HTMLInputElement>;
+    
+    // Call the parent's handleChange function
+    handleChange(syntheticEvent);
+    
+    // Clear error for this field if there are selections
+    if (newDirections.length > 0 && errors.windDirection) {
+      const newErrors = {...errors};
+      delete newErrors.windDirection;
+      setErrors(newErrors);
+    }
+  };
+
+  // Available wind directions
+  const windDirections = [
+    { value: 'north', label: 'Utara' },
+    { value: 'east', label: 'Timur' },
+    { value: 'south', label: 'Selatan' },
+    { value: 'west', label: 'Barat' }
+  ];
+
   return (
     <div className="mb-8">
       <h2 className="text-lg font-medium text-custom-green-500 mb-6">Preferensi Desain</h2>
@@ -258,6 +299,36 @@ const Step1General: React.FC<Step1GeneralProps> = ({
           placeholder="Tulis disini"
           className={`w-full border ${errors.buildingHeight ? 'border-red-500' : 'border-gray-200'} rounded-md px-4 py-3 focus:outline-none focus:ring-1 focus:ring-custom-green-300`}
         />
+      </div>
+      
+      {/* Wind Direction */}
+      <div className="mb-6">
+        <label className="block text-custom-green-400 mb-2">
+          Arah Mata Angin yang Disarankan
+          {errors.windDirection && <span className="text-red-500 text-sm ml-2">*{errors.windDirection}</span>}
+        </label>
+        <div className={`border ${errors.windDirection ? 'border-red-500' : 'border-gray-200'} rounded-md p-3`}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            {windDirections.map((direction) => (
+              <div key={direction.value} className="flex items-center">
+                <input
+                  type="checkbox"
+                  id={`windDirection-${direction.value}`}
+                  name="windDirection"
+                  checked={formData.windDirection.includes(direction.value)}
+                  onChange={(e) => handleWindDirectionChange(direction.value, e.target.checked)}
+                  className="mr-2 h-4 w-4 accent-custom-green-200 border-gray-300 rounded"
+                />
+                <label 
+                  htmlFor={`windDirection-${direction.value}`}
+                  className="text-gray-700 text-md cursor-pointer"
+                >
+                  {direction.label}
+                </label>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
       
       {/* Design Style */}

@@ -14,7 +14,7 @@ export async function GET(
     const authHeader = request.headers.get('Authorization');
     
     // Forward the request to the actual API
-    const response = await fetch(`http://54.153.132.144:8080/api/v1/suggestions/${suggestionID}`, {
+    const response = await fetch(`https://build-better.site/api/v1/suggestions/${suggestionID}`, {
       method: 'GET',
       headers: {
         ...(authHeader ? { 'Authorization': authHeader } : {})
@@ -73,6 +73,7 @@ export async function PATCH(
     const jsonData: any = {};
     
     // Collect array fields data
+    const windDirectionArray: string[] = [];
     const budgetMinArray: number[] = [];
     const budgetMaxArray: number[] = [];
     const materials0Array: string[] = [];
@@ -137,6 +138,17 @@ export async function PATCH(
           materials2Array[index] = value.toString();
         }
       }
+      else if (key.startsWith('windDirection[')) {
+        const indexMatch = key.match(/\[(\d+)\]/);
+        if (indexMatch && indexMatch[1]) {
+          const index = parseInt(indexMatch[1]);
+          // Make sure the array is big enough
+          while (windDirectionArray.length <= index) {
+            windDirectionArray.push("");
+          }
+          windDirectionArray[index] = value.toString();
+        }
+      }
       // Handle numeric fields
       else if (key === 'houseNumber' || key === 'landArea' || key === 'buildingArea' || 
                 key === 'floor' || key === 'rooms' || key === 'buildingHeight' || 
@@ -165,12 +177,15 @@ export async function PATCH(
     if (materials2Array.filter(item => item !== "").length > 0) {
       jsonData.materials2 = materials2Array.filter(item => item !== "");
     }
+    if (windDirectionArray.filter(item => item !== "").length > 0) {
+      jsonData.windDirection = windDirectionArray.filter(item => item !== "");
+    }
 
     // Log the final JSON data being sent to the API
     console.log('Sending JSON to API:', JSON.stringify(jsonData, null, 2));
     
     // Forward the request to the actual API with JSON
-    const response = await fetch(`http://54.153.132.144:8080/api/v1/suggestions/${suggestionID}`, {
+    const response = await fetch(`https://build-better.site/api/v1/suggestions/${suggestionID}`, {
       method: 'PATCH',
       headers: {
         ...(authHeader ? { 'Authorization': authHeader } : {}),
@@ -229,7 +244,7 @@ export async function DELETE(
     const authHeader = request.headers.get('Authorization');
     
     // Forward the request to the actual API
-    const apiUrl = `http://54.153.132.144:8080/api/v1/suggestions/${suggestionID}`;
+    const apiUrl = `https://build-better.site/api/v1/suggestions/${suggestionID}`;
     
     const response = await fetch(apiUrl, {
       method: 'DELETE',

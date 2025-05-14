@@ -9,7 +9,7 @@ export async function GET(request: Request) {
         const authHeader = request.headers.get('Authorization');
 
         // Forward the request to the actual API
-        const apiUrl = `http://54.153.132.144:8080/api/v1/suggestions`;
+        const apiUrl = `https://build-better.site/api/v1/suggestions`;
 
         const response = await fetch(apiUrl, {
             method: 'GET',
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
             rooms: 0,
             designer: "",
             defaultBudget: 1,
-            windDirection: "west",
+            windDirection: [],
             budgetMin: [],
             budgetMax: [],
             materials0: [],
@@ -80,6 +80,7 @@ export async function POST(request: NextRequest) {
         };
         
         // Collect array fields data
+        const windDirectionArray: string[] = [];
         const budgetMinArray: number[] = [];
         const budgetMaxArray: number[] = [];
         const materials0Array: string[] = [];
@@ -144,6 +145,17 @@ export async function POST(request: NextRequest) {
                     materials2Array[index] = value.toString();
                 }
             }
+            else if (key.startsWith('windDirection[')) {
+                const indexMatch = key.match(/\[(\d+)\]/);
+                if (indexMatch && indexMatch[1]) {
+                    const index = parseInt(indexMatch[1]);
+                    // Make sure the array is big enough
+                    while (windDirectionArray.length <= index) {
+                        windDirectionArray.push("");
+                    }
+                    windDirectionArray[index] = value.toString();
+                }
+            }
             // Handle regular fields
             else if (key === 'houseNumber' || key === 'landArea' || key === 'buildingArea' || 
                      key === 'floor' || key === 'rooms' || key === 'buildingHeight') {
@@ -159,6 +171,7 @@ export async function POST(request: NextRequest) {
         }
         
         // Assign the arrays to the final object
+        jsonData.windDirection = windDirectionArray.filter(item => item !== "");
         jsonData.budgetMin = budgetMinArray.filter(item => item !== 0);
         jsonData.budgetMax = budgetMaxArray.filter(item => item !== 0);
         jsonData.materials0 = materials0Array.filter(item => item !== "");
@@ -169,7 +182,7 @@ export async function POST(request: NextRequest) {
         console.log('Sending JSON to API:', JSON.stringify(jsonData, null, 2));
         
         // Forward the request to the actual API with JSON
-        const response = await fetch('http://54.153.132.144:8080/api/v1/suggestions', {
+        const response = await fetch('https://build-better.site/api/v1/suggestions', {
             method: 'POST',
             headers: {
                 ...(authHeader ? { 'Authorization': authHeader } : {}),
@@ -230,7 +243,7 @@ export async function PATCH(request: NextRequest) {
       const formData = await request.formData();
       
       // Forward the request to the actual API
-      const response = await fetch(`http://54.153.132.144:8080/api/v1/suggestions/${suggestionID}`, {
+      const response = await fetch(`https://build-better.site/api/v1/suggestions/${suggestionID}`, {
         method: 'PATCH',
         headers: {
           ...(authHeader ? { 'Authorization': authHeader } : {})
@@ -274,7 +287,7 @@ export async function DELETE(request: NextRequest) {
         const authHeader = request.headers.get('Authorization');
         
         // Forward the request to the actual API
-        const apiUrl = `http://54.153.132.144:8080/api/v1/suggestions/${suggestionID}`;
+        const apiUrl = `https://build-better.site/api/v1/suggestions/${suggestionID}`;
         
         const response = await fetch(apiUrl, {
             method: 'DELETE',

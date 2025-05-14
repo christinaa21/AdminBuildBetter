@@ -45,6 +45,7 @@ interface FormData {
   style: string;
   floor: number | string;
   rooms: number | string;
+  windDirection: string[];
   object: File | null;
   houseImageFront: File | null;
   houseImageSide: File | null;
@@ -92,6 +93,7 @@ const AddHousePage: React.FC = () => {
     style: '',
     floor: '',
     rooms: '',
+    windDirection: [],
     object: null,
     houseImageFront: null,
     houseImageSide: null,
@@ -355,6 +357,11 @@ const AddHousePage: React.FC = () => {
           isValid = false;
         }
         
+        if (formData.windDirection.length === 0) {
+          newErrors.windDirection = "Arah mata angin wajib dipilih";
+          isValid = false;
+        }
+        
         // Validate required files
         if (!formData.object) {
           newErrors.object = "3D rumah wajib diunggah";
@@ -540,13 +547,13 @@ const AddHousePage: React.FC = () => {
       // Prepare JSON data for the initial API call
       const initialData = {
         houseNumber: convertedFormData.houseNumber,
-        windDirection: "west",
         landArea: convertedFormData.landArea,
         buildingArea: convertedFormData.buildingArea,
         buildingHeight: convertedFormData.buildingHeight,
         style: convertedFormData.style,
         floor: convertedFormData.floor,
         rooms: convertedFormData.rooms,
+        windDirection: convertedFormData.windDirection,
         designer: convertedFormData.designer,
         defaultBudget: 1, // As specified, always set to 1
         budgetMin: [budget.min, budget1.min, budget2.min],

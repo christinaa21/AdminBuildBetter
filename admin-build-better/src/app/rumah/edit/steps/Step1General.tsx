@@ -9,6 +9,7 @@ interface Step1GeneralProps {
     style: string;
     floor: number | string;
     rooms: number | string;
+    windDirection: string[];
     object: File | null;
     houseImageFront: File | null;
     houseImageSide: File | null;
@@ -44,6 +45,14 @@ const Step1General: React.FC<Step1GeneralProps> = ({
   // Maximum file size in bytes (200KB = 200 * 1024 bytes)
   const MAX_IMAGE_SIZE = 200 * 1024;
   
+  // Wind direction options
+  const windDirections = [
+    { label: "Utara", value: "north" },
+    { label: "Timur", value: "east" },
+    { label: "Selatan", value: "south" },
+    { label: "Barat", value: "west" }
+  ];
+  
   // Simplified numeric input handler
   const handleNumericChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -61,6 +70,40 @@ const Step1General: React.FC<Step1GeneralProps> = ({
         delete newErrors[name];
         setErrors(newErrors);
       }
+    }
+  };
+
+  // Handle checkbox change for wind directions
+  const handleCheckboxChange = (value: string, checked: boolean) => {
+    // Create a copy of the current windDirection array
+    let newDirections = [...formData.windDirection];
+    
+    if (checked) {
+      // Add the value if it's not already in the array
+      if (!newDirections.includes(value)) {
+        newDirections.push(value);
+      }
+    } else {
+      // Remove the value
+      newDirections = newDirections.filter(dir => dir !== value);
+    }
+    
+    // Create a synthetic event
+    const syntheticEvent = {
+      target: {
+        name: 'windDirection',
+        value: newDirections
+      }
+    } as unknown as React.ChangeEvent<HTMLInputElement>;
+    
+    // Call the parent's handleChange function
+    handleChange(syntheticEvent);
+    
+    // Clear error for this field if there are selections
+    if (newDirections.length > 0 && errors.windDirection) {
+      const newErrors = {...errors};
+      delete newErrors.windDirection;
+      setErrors(newErrors);
     }
   };
 
@@ -331,7 +374,7 @@ const Step1General: React.FC<Step1GeneralProps> = ({
       </div>
       
       {/* Number of Rooms */}
-      <div className="mb-8">
+      <div className="mb-6">
         <label className="block text-custom-green-400 mb-2">
           Jumlah Kamar
           {errors.rooms && <span className="text-red-500 text-sm ml-2">*{errors.rooms}</span>}
@@ -361,6 +404,36 @@ const Step1General: React.FC<Step1GeneralProps> = ({
             <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
             </svg>
+          </div>
+        </div>
+      </div>
+
+      {/* Wind Direction */}
+      <div className="mb-8">
+        <label className="block text-custom-green-400 mb-2">
+          Arah mata angin yang disarankan
+          {errors.windDirection && <span className="text-red-500 text-sm ml-2">*{errors.windDirection}</span>}
+        </label>
+        
+        <div className={`border ${errors.windDirection ? 'border-red-500' : 'border-gray-200'} rounded-md p-3`}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            {windDirections.map((direction) => (
+              <div key={direction.value} className="flex items-center">
+                <input
+                  type="checkbox"
+                  id={`wind-${direction.value}`}
+                  checked={formData.windDirection.includes(direction.value)}
+                  onChange={(e) => handleCheckboxChange(direction.value, e.target.checked)}
+                  className="mr-2 h-4 w-4 accent-custom-green-200 border-gray-300 rounded"
+                />
+                <label 
+                  htmlFor={`wind-${direction.value}`}
+                  className="text-gray-700 text-md cursor-pointer"
+                >
+                  {direction.label}
+                </label>
+              </div>
+            ))}
           </div>
         </div>
       </div>

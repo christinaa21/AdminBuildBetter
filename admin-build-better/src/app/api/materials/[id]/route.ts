@@ -14,7 +14,7 @@ export async function GET(
     const authHeader = request.headers.get('Authorization');
     
     // Forward the request to the actual API
-    const response = await fetch(`http://54.153.132.144:8080/api/v1/materials/${materialId}`, {
+    const response = await fetch(`https://build-better.site/api/v1/materials/${materialId}`, {
       method: 'GET',
       headers: {
         ...(authHeader ? { 'Authorization': authHeader } : {})
@@ -61,7 +61,7 @@ export async function PATCH(
     const formData = await request.formData();
     
     // Forward the request to the actual API
-    const response = await fetch(`http://54.153.132.144:8080/api/v1/materials/${materialId}`, {
+    const response = await fetch(`https://build-better.site/api/v1/materials/${materialId}`, {
       method: 'PATCH',
       headers: {
         ...(authHeader ? { 'Authorization': authHeader } : {})
