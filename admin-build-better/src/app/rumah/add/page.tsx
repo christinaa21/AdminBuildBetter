@@ -540,6 +540,7 @@ const AddHousePage: React.FC = () => {
       // Prepare JSON data for the initial API call
       const initialData = {
         houseNumber: convertedFormData.houseNumber,
+        windDirection: "west",
         landArea: convertedFormData.landArea,
         buildingArea: convertedFormData.buildingArea,
         buildingHeight: convertedFormData.buildingHeight,
