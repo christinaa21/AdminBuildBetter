@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 'use client'
 
@@ -110,7 +109,7 @@ const Arsitek: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [router]);
+  }, [router, transformApiData]);
 
   // Check for authentication on component mount
   useEffect(() => {
