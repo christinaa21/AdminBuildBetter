@@ -55,9 +55,13 @@ const ArchitectCard: React.FC<ArchitectCardProps> = ({ architect, onView, onDele
             {architect.portfolio ? (
               <div className="bg-custom-white-100 rounded-full px-4 py-2 flex items-center gap-2">
                 <MdDesignServices className="text-custom-green-200" />
-                <Link href={architect.portfolio}>
+                <a 
+                  href={architect.portfolio} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                >
                   <Caption className="text-custom-green-200">Portfolio</Caption>
-                </Link>
+                </a>
               </div>
             ) : (
               <div className="bg-gray-100 rounded-full px-4 py-2 flex items-center gap-2 opacity-60 cursor-not-allowed">

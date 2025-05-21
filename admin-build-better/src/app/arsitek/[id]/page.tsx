@@ -270,7 +270,20 @@ const ArchitectDetail = () => {
                 <H3 className="text-custom-olive-100 mb-4">Portfolio</H3>
                 {architect?.portfolio ? (
                   <div className="prose max-w-none text-custom-olive-50">
-                    <p>{architect.portfolio}</p>
+                    <p>
+                      {architect.portfolio.startsWith('http') ? (
+                        <a 
+                          href={architect.portfolio} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-custom-green-300 hover:underline"
+                        >
+                          {architect.portfolio}
+                        </a>
+                      ) : (
+                        architect.portfolio
+                      )}
+                      </p>
                   </div>
                 ) : (
                   <p className="text-custom-gray-200 italic">Portfolio tidak tersedia</p>
