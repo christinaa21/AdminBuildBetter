@@ -3,7 +3,6 @@ import Image from 'next/image';
 import { FaTrash, FaSuitcase, FaEye } from 'react-icons/fa';
 import { MdDesignServices, MdLocationPin } from "react-icons/md";
 import { Title, Caption } from './Typography';
-import Link from 'next/link';
 
 interface Architect {
   id: string;
