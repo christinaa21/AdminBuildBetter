@@ -16,8 +16,8 @@ interface Architect {
   experience: number;
   portfolio: string;
   city: string;
-  rateOnline: string; // Changed to string to store formatted rate
-  rateOffline: string; // Changed to string to store formatted rate
+  rateOnline: string; 
+  rateOffline: string; 
 }
 
 interface ApiArchitect {
@@ -57,7 +57,8 @@ const Arsitek: React.FC = () => {
   };
 
   // Function to transform API data into the format needed for ArchitectCard
-  const transformApiData = (apiData: ApiArchitect[]): Architect[] => {
+  // Moved outside useCallback to avoid recreation on each render
+  const transformApiData = useCallback((apiData: ApiArchitect[]): Architect[] => {
     return apiData.map(architect => ({
       id: architect.id,
       username: architect.username,
@@ -68,7 +69,7 @@ const Arsitek: React.FC = () => {
       rateOnline: formatRate(architect.rateOnline),
       rateOffline: formatRate(architect.rateOffline)
     }));
-  };
+  }, []);
 
   // Fetch architects from API
   const fetchArchitects = useCallback(async () => {
@@ -121,7 +122,7 @@ const Arsitek: React.FC = () => {
     }
     
     fetchArchitects();
-  }, [router, fetchArchitects]);
+  }, [fetchArchitects]);
 
   // Handle clicks outside the modal
   useEffect(() => {

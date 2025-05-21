@@ -182,7 +182,7 @@ export async function DELETE(request: NextRequest) {
         const response = await fetch(apiUrl, {
             method: 'DELETE',
             headers: {
-                'Authorization': authHeader || ''
+                ...(authHeader ? { 'Authorization': authHeader} : {})
             },
         });
         
