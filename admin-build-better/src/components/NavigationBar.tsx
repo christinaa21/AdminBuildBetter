@@ -36,6 +36,9 @@ const NavigationBar: React.FC = () => {
           <Link href="/arsitek" className={`pb-1 px-2 ${isActive('/arsitek')}`}>
             Arsitek
           </Link>
+          <Link href="/konsultasi" className={`pb-1 px-2 ${isActive('/konsultasi')}`}>
+            Konsultasi
+          </Link>
           <Link href="/artikel" className={`pb-1 px-2 ${isActive('/artikel')}`}>
             Artikel
           </Link>
