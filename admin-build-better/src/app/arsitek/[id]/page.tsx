@@ -158,7 +158,7 @@ const ArchitectDetail = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <NavigationBar />
       
       <main className="container mx-auto py-8 px-4 md:px-8">

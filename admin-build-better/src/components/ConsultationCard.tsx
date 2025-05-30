@@ -1,7 +1,7 @@
 import React from 'react';
 import { FaComments, FaMapMarkerAlt, FaCalendarAlt, FaClock, FaHandshake, FaEdit } from 'react-icons/fa';
 import { MdPayment } from 'react-icons/md';
-import { Title, Caption } from './Typography';
+import { Title, Body, Caption } from './Typography';
 
 interface Consultation {
   id: string;
@@ -108,7 +108,7 @@ const ConsultationCard: React.FC<ConsultationCardProps> = ({ consultation, onEdi
       <div className="mb-2 flex justify-between items-start">
         <div>
           <Title className="text-custom-olive-50 mb-1">{consultation.userName}</Title>
-          <Caption className="text-custom-olive-50">ke arsitek {consultation.architectName}</Caption>
+          <Body className="text-custom-olive-50">ke arsitek {consultation.architectName}</Body>
         </div>
         <div className="text-right">
           <Caption className="text-custom-olive-50">{formatDateTime(consultation.createdAt)}</Caption>

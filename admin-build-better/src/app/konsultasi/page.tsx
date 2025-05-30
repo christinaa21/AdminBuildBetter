@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 'use client'
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import NavigationBar from '@/components/NavigationBar';
 import ConsultationCard from '@/components/ConsultationCard';
-import { FaSearch, FaTimes } from 'react-icons/fa';
-import { Caption, H3, Title } from '@/components/Typography';
+import { FaSearch } from 'react-icons/fa';
+import { H3 } from '@/components/Typography';
 import Button from '@/components/Button';
 import { useRouter } from 'next/navigation';
 
@@ -43,17 +43,57 @@ interface ApiConsultation {
 const Konsultasi: React.FC = () => {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [consultationToDelete, setConsultationToDelete] = useState<string | null>(null);
-  const modalRef = useRef<HTMLDivElement>(null);
   
   const [consultations, setConsultations] = useState<Consultation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Status mapping for Indonesian labels and sorting priority
+  const statusMapping = {
+    'waiting-for-confirmation': { label: 'menunggu konfirmasi', priority: 1 },
+    'waiting-for-payment': { label: 'menunggu pembayaran', priority: 2 },
+    'scheduled': { label: 'dijadwalkan', priority: 3 },
+    'in-progress': { label: 'berlangsung', priority: 4 },
+    'ended': { label: 'berakhir', priority: 5 },
+    'cancelled': { label: 'dibatalkan', priority: 6 }
+  };
+
+  // Type mapping for Indonesian labels
+  const typeMapping = {
+    'online': 'chat',
+    'offline': 'tatap muka'
+  };
+
+  // Function to sort consultations
+  const sortConsultations = useCallback((consultations: Consultation[]): Consultation[] => {
+    return [...consultations].sort((a, b) => {
+      // Get date without time for comparison
+      const dateA = new Date(a.createdAt);
+      const dateB = new Date(b.createdAt);
+      
+      // Set time to 00:00:00 to compare only dates
+      dateA.setHours(0, 0, 0, 0);
+      dateB.setHours(0, 0, 0, 0);
+      
+      const dateOnlyA = dateA.getTime();
+      const dateOnlyB = dateB.getTime();
+      
+      // First sort by created date (newest date first)
+      if (dateOnlyA !== dateOnlyB) {
+        return dateOnlyB - dateOnlyA; // Newest date first
+      }
+      
+      // If same date, sort by status priority
+      const statusA = statusMapping[a.status as keyof typeof statusMapping]?.priority || 999;
+      const statusB = statusMapping[b.status as keyof typeof statusMapping]?.priority || 999;
+      
+      return statusA - statusB;
+    });
+  }, []);
+
   // Function to transform API data into the format needed for ConsultationCard
   const transformApiData = useCallback((apiData: ApiConsultation[]): Consultation[] => {
-    return apiData.map(consultation => ({
+    const transformed = apiData.map(consultation => ({
       id: consultation.id,
       userName: consultation.userName,
       architectName: consultation.architectName,
@@ -67,7 +107,9 @@ const Konsultasi: React.FC = () => {
       endDate: consultation.endDate,
       createdAt: consultation.createdAt
     }));
-  }, []);
+    
+    return sortConsultations(transformed);
+  }, [sortConsultations]);
 
   // Mock data for testing
   const mockConsultations: Consultation[] = [
@@ -163,13 +205,13 @@ const Konsultasi: React.FC = () => {
     setError(null);
     
     try {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // // Simulate API delay
+      // await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Use mock data instead of API call
-      setConsultations(mockConsultations);
+      // // Use mock data instead of API call
+      // setConsultations(sortConsultations(mockConsultations));
       
-      /* 
+      
       // Uncomment this section when you want to use real API
       const token = localStorage.getItem('authToken');
       
@@ -179,7 +221,7 @@ const Konsultasi: React.FC = () => {
       }
       
       // Use Next.js API route as a proxy to avoid CORS issues
-      const response = await fetch('/api/consultations', {
+      const response = await fetch('/api/konsultasi', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -198,21 +240,21 @@ const Konsultasi: React.FC = () => {
       } else {
         setError('Failed to load consultations. Please try again later.');
       }
-      */
+    
     } catch (error) {
       console.error('Error fetching consultations:', error);
       setError('An error occurred while fetching consultations. Please try again later.');
     } finally {
       setIsLoading(false);
     }
-  }, [router]);
+  }, [router, transformApiData]);
 
   // Check for authentication on component mount (disabled for testing with mock data)
   useEffect(() => {
     // Skip authentication check for testing with mock data
-    fetchConsultations();
+    // setConsultations(sortConsultations(mockConsultations));
+    // setIsLoading(false);
     
-    /* 
     // Uncomment this section when you want to use real authentication
     const token = localStorage.getItem('authToken');
     if (!token) {
@@ -222,110 +264,34 @@ const Konsultasi: React.FC = () => {
     }
     
     fetchConsultations();
-    */
-  }, [fetchConsultations]);
-
-  // Handle clicks outside the modal
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
-        closeDeleteModal();
-      }
-    };
-
-    if (showDeleteModal) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
     
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [showDeleteModal]);
+  }, [fetchConsultations, router]);
 
-  const handleView = (id: string) => {
+  const handleEdit = (id: string) => {
     console.log(`View consultation with id: ${id}`);
     router.push(`/konsultasi/${id}`);
   };
 
-  const handleDeleteClick = (id: string) => {
-    setConsultationToDelete(id);
-    setShowDeleteModal(true);
-  };
-
-  const confirmDelete = async () => {
-    if (consultationToDelete) {
-      setIsLoading(true);
-      try {
-        // Simulate API delay for delete operation
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        // Remove from mock data
-        setConsultations(consultations.filter(consultation => consultation.id !== consultationToDelete));
-        closeDeleteModal();
-        
-        /* 
-        // Uncomment this section when you want to use real API
-        const token = localStorage.getItem('authToken');
-        
-        // Call the API to delete the consultation
-        const response = await fetch(`/api/consultations/${consultationToDelete}`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        
-        // Handle possible empty responses
-        let result;
-        try {
-          const text = await response.text();
-          result = text ? JSON.parse(text) : { code: response.status };
-        } catch (e) {
-          console.warn('Failed to parse JSON response:', e);
-          // Fallback to using HTTP status
-          result = { code: response.status };
-        }
-        
-        if (response.ok) {
-          // Filter out the deleted consultation from the consultations array
-          setConsultations(consultations.filter(consultation => consultation.id !== consultationToDelete));
-          closeDeleteModal();
-        } else if (response.status === 401 || response.status === 403) {
-          // Handle unauthorized access
-          localStorage.removeItem('authToken');
-          localStorage.removeItem('userData');
-          router.push('/login');
-        } else {
-          setError(`Failed to delete consultation (${response.status}). Please try again later.`);
-        }
-        */
-      } catch (error) {
-        console.error('Error deleting consultation:', error);
-        setError('An error occurred while deleting the consultation. Please try again later.');
-      } finally {
-        setIsLoading(false);
-        closeDeleteModal();
-      }
-    }
-  };
-
-  const closeDeleteModal = () => {
-    setShowDeleteModal(false);
-    setConsultationToDelete(null);
-  };
-
-  // Find the consultation details for the delete confirmation message
-  const consultationToDeleteDetails = consultationToDelete 
-    ? consultations.find(consultation => consultation.id === consultationToDelete)
-    : null;
-
-  // Filter consultations based on search term
-  const filteredConsultations = consultations.filter(consultation => 
-    consultation.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    consultation.architectName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    consultation.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    consultation.status.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Filter consultations based on search term with improved mapping
+  const filteredConsultations = consultations.filter(consultation => {
+    const searchLower = searchTerm.toLowerCase();
+    
+    // Get Indonesian status label
+    const statusLabel = statusMapping[consultation.status as keyof typeof statusMapping]?.label || consultation.status;
+    
+    // Get Indonesian type label
+    const typeLabel = typeMapping[consultation.type as keyof typeof typeMapping] || consultation.type;
+    
+    return (
+      consultation.userName.toLowerCase().includes(searchLower) ||
+      consultation.architectName.toLowerCase().includes(searchLower) ||
+      consultation.city.toLowerCase().includes(searchLower) ||
+      consultation.status.toLowerCase().includes(searchLower) ||
+      statusLabel.toLowerCase().includes(searchLower) ||
+      consultation.type.toLowerCase().includes(searchLower) ||
+      typeLabel.toLowerCase().includes(searchLower)
+    );
+  });
 
   // Loading state
   if (isLoading && consultations.length === 0) {
@@ -375,7 +341,7 @@ const Konsultasi: React.FC = () => {
           <FaSearch className="absolute left-4 top-3 text-gray-400" />
           <input
             type="text"
-            placeholder="Cari konsultasi berdasarkan nama, arsitek, kota, atau status"
+            placeholder="Cari konsultasi berdasarkan nama, arsitek, kota, status, atau tipe konsultasi"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full py-2 pl-12 pr-4 text-custom-olive-50 rounded-full border border-custom-gray-200 focus:outline-none focus:ring-1 focus:ring-custom-green-300"
@@ -389,7 +355,7 @@ const Konsultasi: React.FC = () => {
               <ConsultationCard 
                 key={consultation.id} 
                 consultation={consultation}
-                onEdit={handleView}
+                onEdit={handleEdit}
               />
             ))}
           </div>
@@ -401,47 +367,6 @@ const Konsultasi: React.FC = () => {
           </div>
         )}
       </main>
-
-      {/* Delete Confirmation Modal */}
-      {showDeleteModal && consultationToDeleteDetails && (
-        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
-          <div ref={modalRef} className="bg-custom-white-50 rounded-xl p-6 w-full max-w-md">
-            <div className="flex justify-between items-center mb-4">
-              <Title className="text-custom-olive-100">Konfirmasi Hapus</Title>
-              <button 
-                onClick={closeDeleteModal}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <FaTimes />
-              </button>
-            </div>
-            
-            <div className="mb-6">
-              <p className="text-custom-olive-50">
-                Apakah Anda yakin ingin menghapus konsultasi {consultationToDeleteDetails.userName} dengan {consultationToDeleteDetails.architectName}?
-              </p>
-              <Caption className="text-custom-gray-200 mt-2">Tindakan ini tidak dapat dibatalkan.</Caption>
-            </div>
-            
-            <div className="flex justify-end space-x-3">
-              <button
-                onClick={closeDeleteModal}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
-                disabled={isLoading}
-              >
-                Batal
-              </button>
-              <button
-                onClick={confirmDelete}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-                disabled={isLoading}
-              >
-                {isLoading ? 'Menghapus...' : 'Hapus'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
