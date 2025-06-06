@@ -7,7 +7,7 @@ export async function GET(request: Request) {
         const authHeader = request.headers.get('Authorization');
 
         // Forward the request to the actual API
-        const apiUrl = `https://build-better.site/api/v1/consultations`;
+        const apiUrl = `https://build-better.site/api/v1/consultations?includeCancelled=true`;
 
         const response = await fetch(apiUrl, {
             method: 'GET',

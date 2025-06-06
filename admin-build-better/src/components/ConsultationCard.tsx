@@ -164,7 +164,7 @@ const ConsultationCard: React.FC<ConsultationCardProps> = ({ consultation, onEdi
       </div>
 
       {/* Reason (if cancelled) */}
-      {/* {consultation.status === 'cancelled' && consultation.reason && (
+      {consultation.status === 'cancelled' && consultation.reason && (
         <div className="mt-3 p-3 bg-red-50 rounded-lg">
           <Caption className="text-red-600">
             Alasan: {consultation.reason === 'architect is unavailable' ? 'Arsitek tidak tersedia' :
@@ -173,7 +173,7 @@ const ConsultationCard: React.FC<ConsultationCardProps> = ({ consultation, onEdi
                      consultation.reason}
           </Caption>
         </div>
-      )} */}
+      )}
 
       {/* Action buttons */}
       <div className="absolute top-0 right-0 h-full flex flex-col justify-center items-center bg-zinc-50 p-4 shadow-sm">

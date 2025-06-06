@@ -351,13 +351,25 @@ const ApprovalPage: React.FC = () => {
             <div className="w-5"></div>
           </div>
           {/* Status Chip */}
-          <div className="flex justify-center mb-6">
+          <div className="flex justify-center mb-3">
             <div className={`${currentStatus.backgroundColor} rounded-full px-4 py-2 flex items-center gap-2`}>
               <div className={`w-2 h-2 rounded-full ${currentStatus.dotColor}`}></div>
               <Caption className={currentStatus.textColor}>{currentStatus.label}</Caption>
             </div>
           </div>
+          {/* Reason (if cancelled) */}
+          {consultation.status === 'cancelled' && consultation.reason && (
+            <div className="mb-8 ph-3 rounded-lg">
+              <Caption className="text-red-600">
+                Alasan: {consultation.reason === 'architect is unavailable' ? 'Arsitek tidak tersedia' :
+                        consultation.reason === 'proof of payment is invalid' ? 'Bukti pembayaran tidak valid' :
+                        consultation.reason === 'user cancelled the consultation' ? 'Pengguna membatalkan konsultasi' :
+                        consultation.reason}
+              </Caption>
+            </div>
+          )}
         </div>
+
 
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
