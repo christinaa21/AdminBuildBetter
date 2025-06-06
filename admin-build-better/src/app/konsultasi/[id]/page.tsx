@@ -250,38 +250,45 @@ const ApprovalPage: React.FC = () => {
         }
         
       } else {
-        // Reject consultation
-        let message: string;
-        
-        if (!paymentConfirmed && !scheduleConfirmed) {
-          message = "proof of payment is invalid";
-        } else if (!paymentConfirmed) {
-          message = "proof of payment is invalid";
-        } else {
-          message = "architect is unavailable";
-        }
+          // Reject consultation
+          // SIMPLIFIED LOGIC:
+          let message: string;
+          if (!paymentConfirmed) {
+              message = "proof of payment is invalid";
+          } else { // This case implies scheduleConfirmed is false
+              message = "architect is unavailable";
+          }
 
-        console.log('Rejecting consultation:', consultationId, 'with message:', message);
-        alert('Konsultasi berhasil ditolak!');
+          console.log('Rejecting consultation:', consultationId, 'with message:', message);
+          
+          const token = localStorage.getItem('authToken');
+          if (!token) {
+              router.push('/login');
+              return;
+          }
 
-        
-        // Uncomment when ready to use real API
-        const response = await fetch(`/api/konsultasi/${consultationId}/reject`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ message })
-        });
+          const response = await fetch(`/api/konsultasi/${consultationId}/reject`, {
+              method: 'POST',
+              headers: {
+                  'Authorization': `Bearer ${token}`,
+                  'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ message })
+          });
 
-        const result = await response.json();
-        if (result.code === 200) {
-          alert('Konsultasi berhasil ditolak!');
-        } else {
-          throw new Error('Failed to reject consultation');
-        }
-        
+          if (!response.ok) {
+              const errorResult = await response.json();
+              // Provide a more specific error message
+              throw new Error(errorResult.error || 'Failed to reject consultation');
+          }
+
+          const result = await response.json();
+          if (result.code === 200) {
+              alert('Konsultasi berhasil ditolak!');
+          } else {
+              // This case might not be reached if using response.ok check, but good for safety
+              throw new Error(result.error || 'Failed to reject consultation');
+          }
       }
 
       // Navigate back to consultations list

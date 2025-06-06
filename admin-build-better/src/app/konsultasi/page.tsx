@@ -17,7 +17,7 @@ interface Consultation {
   total: number | null;
   status: string;
   reason: string | null;
-  city: string;
+  userCity: string;
   location: string;
   startDate: string;
   endDate: string;
@@ -33,7 +33,7 @@ interface ApiConsultation {
   total: number | null;
   status: string;
   reason: string | null;
-  city: string;
+  userCity: string;
   location: string;
   startDate: string;
   endDate: string;
@@ -101,7 +101,7 @@ const Konsultasi: React.FC = () => {
       total: consultation.total,
       status: consultation.status,
       reason: consultation.reason,
-      city: consultation.city,
+      userCity: consultation.userCity,
       location: consultation.location,
       startDate: consultation.startDate,
       endDate: consultation.endDate,
@@ -111,108 +111,12 @@ const Konsultasi: React.FC = () => {
     return sortConsultations(transformed);
   }, [sortConsultations]);
 
-  // Mock data for testing
-  const mockConsultations: Consultation[] = [
-    {
-      id: "62b8a8b0-4d28-47a0-832d-1107d84fda68",
-      userName: "Timothy Subekti",
-      architectName: "Erensi Ratu Chelsia",
-      type: "offline",
-      total: 100000,
-      status: "waiting-for-payment",
-      reason: null,
-      city: "Kota Bandung",
-      location: "https://g.co/kgs/NKCdLzj",
-      startDate: "2025-05-26T16:00:00",
-      endDate: "2025-05-26T17:00:00",
-      createdAt: "2025-05-23T00:51:05.038771"
-    },
-    {
-      id: "73c9b9c1-5e39-48b1-943e-2218e95feb79",
-      userName: "Sarah Amanda",
-      architectName: "Budi Santoso",
-      type: "online",
-      total: 75000,
-      status: "scheduled",
-      reason: null,
-      city: "Kota Jakarta Selatan",
-      location: "",
-      startDate: "2025-05-30T09:00:00",
-      endDate: "2025-05-30T10:00:00",
-      createdAt: "2025-05-25T14:20:15.123456"
-    },
-    {
-      id: "84d0c0d2-6f4a-59c2-a54f-3329fa6gec8a",
-      userName: "Andi Pratama",
-      architectName: "Maya Sari",
-      type: "offline",
-      total: 150000,
-      status: "cancelled",
-      reason: "user cancelled the consultation",
-      city: "Surabaya",
-      location: "https://g.co/kgs/AbCdEfG",
-      startDate: "2025-05-28T14:00:00",
-      endDate: "2025-05-28T15:30:00",
-      createdAt: "2025-05-22T10:30:45.987654"
-    },
-    {
-      id: "95e1d1e3-7g5b-6ad3-b65g-4430gb7hfd9b",
-      userName: "Lisa Wijaya",
-      architectName: "Rendi Kurniawan",
-      type: "online",
-      total: null,
-      status: "ended",
-      reason: null,
-      city: "Yogyakarta",
-      location: "",
-      startDate: "2025-05-20T13:00:00",
-      endDate: "2025-05-20T14:00:00",
-      createdAt: "2025-05-18T16:45:30.456789"
-    },
-    {
-      id: "a6f2e2f4-8h6c-7be4-c76h-5541hc8ige0c",
-      userName: "David Chen",
-      architectName: "Siti Nurhaliza",
-      type: "offline",
-      total: 200000,
-      status: "in-progress",
-      reason: null,
-      city: "Medan",
-      location: "https://g.co/kgs/XyZaBc",
-      startDate: "2025-05-29T10:00:00",
-      endDate: "2025-05-29T12:00:00",
-      createdAt: "2025-05-27T08:15:20.789012"
-    },
-    {
-      id: "b7g3f3g5-9i7d-8cf5-d87i-6652id9jhf1d",
-      userName: "Nadia Putri",
-      architectName: "Ahmad Fauzi",
-      type: "online",
-      total: 90000,
-      status: "waiting-for-confirmation",
-      reason: null,
-      city: "Makassar",
-      location: "",
-      startDate: "2025-06-01T15:00:00",
-      endDate: "2025-06-01T16:00:00",
-      createdAt: "2025-05-28T12:00:00.345678"
-    }
-  ];
-
-  // Fetch consultations from API (using mock data for testing)
+  // Fetch consultations from API
   const fetchConsultations = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     
     try {
-      // // Simulate API delay
-      // await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // // Use mock data instead of API call
-      // setConsultations(sortConsultations(mockConsultations));
-      
-      
-      // Uncomment this section when you want to use real API
       const token = localStorage.getItem('authToken');
       
       if (!token) {
@@ -232,6 +136,7 @@ const Konsultasi: React.FC = () => {
       if (response.ok && result.code === 200) {
         // Transform and store the consultation data
         setConsultations(transformApiData(result.data));
+        console.log(result.data)
       } else if (response.status === 401 || response.status === 403) {
         // Handle unauthorized access
         localStorage.removeItem('authToken');
@@ -249,13 +154,8 @@ const Konsultasi: React.FC = () => {
     }
   }, [router, transformApiData]);
 
-  // Check for authentication on component mount (disabled for testing with mock data)
+  // Check for authentication on component mount
   useEffect(() => {
-    // Skip authentication check for testing with mock data
-    // setConsultations(sortConsultations(mockConsultations));
-    // setIsLoading(false);
-    
-    // Uncomment this section when you want to use real authentication
     const token = localStorage.getItem('authToken');
     if (!token) {
       // Redirect to login if no token is found
@@ -285,7 +185,7 @@ const Konsultasi: React.FC = () => {
     return (
       consultation.userName.toLowerCase().includes(searchLower) ||
       consultation.architectName.toLowerCase().includes(searchLower) ||
-      consultation.city.toLowerCase().includes(searchLower) ||
+      consultation.userCity.toLowerCase().includes(searchLower) ||
       consultation.status.toLowerCase().includes(searchLower) ||
       statusLabel.toLowerCase().includes(searchLower) ||
       consultation.type.toLowerCase().includes(searchLower) ||

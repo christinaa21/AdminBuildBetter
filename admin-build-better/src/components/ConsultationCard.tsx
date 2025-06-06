@@ -11,7 +11,7 @@ interface Consultation {
   total: number | null;
   status: string;
   reason: string | null;
-  city: string;
+  userCity: string;
   location: string;
   startDate: string;
   endDate: string;
@@ -150,10 +150,10 @@ const ConsultationCard: React.FC<ConsultationCardProps> = ({ consultation, onEdi
           </Caption>
         </div>
 
-        {/* City */}
+        {/* userCity */}
         <div className="bg-custom-white-100 rounded-full px-4 py-2 flex items-center gap-2">
           <FaMapMarkerAlt className="text-custom-green-200" />
-          <Caption className="text-custom-green-200">{consultation.city}</Caption>
+          <Caption className="text-custom-green-200">{consultation.userCity}</Caption>
         </div>
 
         {/* Total Price */}
