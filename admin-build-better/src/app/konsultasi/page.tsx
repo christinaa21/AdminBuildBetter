@@ -111,6 +111,31 @@ const Konsultasi: React.FC = () => {
     return sortConsultations(transformed);
   }, [sortConsultations]);
 
+  // Function to refresh consultation statuses
+  const refreshConsultations = async (token: string): Promise<boolean> => {
+    try {
+      const refreshResponse = await fetch('/api/konsultasi/refresh', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      const refreshResult = await refreshResponse.json();
+      
+      if (refreshResponse.ok && refreshResult.code === 200) {
+        console.log('Consultations refreshed successfully');
+        return true;
+      } else {
+        console.warn('Failed to refresh consultations:', refreshResult.error || 'Unknown error');
+        return false;
+      }
+    } catch (error) {
+      console.warn('Error refreshing consultations:', error);
+      return false;
+    }
+  };
+
   // Fetch consultations from API
   const fetchConsultations = useCallback(async () => {
     setIsLoading(true);
@@ -124,7 +149,10 @@ const Konsultasi: React.FC = () => {
         return;
       }
       
-      // Use Next.js API route as a proxy to avoid CORS issues
+      // Step 1: Refresh consultations first
+      await refreshConsultations(token);
+      
+      // Step 2: Fetch consultations using Next.js API route as a proxy to avoid CORS issues
       const response = await fetch('/api/konsultasi', {
         headers: {
           'Authorization': `Bearer ${token}`

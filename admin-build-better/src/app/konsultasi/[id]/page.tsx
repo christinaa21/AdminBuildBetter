@@ -48,32 +48,6 @@ const ApprovalPage: React.FC = () => {
   const [scheduleConfirmed, setScheduleConfirmed] = useState<boolean | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Mock data for testing
-  const mockConsultation: Consultation = {
-    id: "62b8a8b0-4d28-47a0-832d-1107d84fda68",
-    userName: "Timothy Subekti",
-    architectName: "Erensi Ratu Chelsia",
-    type: "offline",
-    total: 100000,
-    status: "waiting-for-confirmation",
-    reason: null,
-    userCity: "Kota Bandung",
-    architectCity: "Kota Bandung",
-    location: "https://g.co/kgs/NKCdLzj",
-    startDate: "2025-05-26T16:00:00",
-    endDate: "2025-05-26T17:00:00",
-    createdAt: "2025-05-23T00:51:05.038771"
-  };
-
-  const mockPaymentData: PaymentData = {
-    id: "bbe5d89c-b000-4c56-85af-f6da7babed84",
-    consultationId: "62b8a8b0-4d28-47a0-832d-1107d84fda68",
-    proofPayment: "https://build-better-dev.s3.ap-southeast-2.amazonaws.com/proof-of-payments/d31d0ef5-0fb5-4b14-ac8c-a564c7261c2a_qrcode (1).png",
-    uploadProofPayment: 1,
-    paymentMethod: "Bank BCA",
-    sender: "Timothy Subekti"
-  };
-
   // Status configuration
   const statusConfig = {
     'waiting-for-payment': { 
@@ -123,12 +97,6 @@ const ApprovalPage: React.FC = () => {
     setError(null);
 
     try {
-      // Using mock data for testing
-      // setConsultation(mockConsultation);
-      // setPaymentData(mockPaymentData);
-
-      
-      // Uncomment when ready to use real API
       const token = localStorage.getItem('authToken');
       
       if (!token) {
@@ -228,12 +196,6 @@ const ApprovalPage: React.FC = () => {
       const isApproved = paymentConfirmed && scheduleConfirmed;
       
       if (isApproved) {
-        // Approve consultation - using mock for now
-        // console.log('Approving consultation:', consultationId);
-        // alert('Konsultasi berhasil disetujui!');
-        
-        
-        // Uncomment when ready to use real API
         const response = await fetch(`/api/konsultasi/${consultationId}/approve`, {
           method: 'POST',
           headers: {
@@ -245,13 +207,14 @@ const ApprovalPage: React.FC = () => {
         const result = await response.json();
         if (result.code === 200) {
           alert('Konsultasi berhasil disetujui!');
-        } else {
+        } else if (result.code === 400 && result.errror === "Consultation start date cannot be in the past") {
+          alert('Jadwal konsultasi telah berlalu! Booking dibatalkan otomatis.')
+        }
+          else {
           throw new Error('Failed to approve consultation');
         }
         
       } else {
-          // Reject consultation
-          // SIMPLIFIED LOGIC:
           let message: string;
           if (!paymentConfirmed) {
               message = "proof of payment is invalid";

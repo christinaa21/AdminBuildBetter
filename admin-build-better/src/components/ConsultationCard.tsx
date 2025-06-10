@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaComments, FaMapMarkerAlt, FaCalendarAlt, FaClock, FaHandshake, FaEdit } from 'react-icons/fa';
+import { FaComments, FaCalendarAlt, FaClock, FaHandshake, FaEdit } from 'react-icons/fa';
 import { MdPayment } from 'react-icons/md';
 import { Title, Body, Caption } from './Typography';
 
@@ -11,7 +11,6 @@ interface Consultation {
   total: number | null;
   status: string;
   reason: string | null;
-  userCity: string;
   location: string;
   startDate: string;
   endDate: string;
@@ -150,12 +149,6 @@ const ConsultationCard: React.FC<ConsultationCardProps> = ({ consultation, onEdi
           </Caption>
         </div>
 
-        {/* userCity */}
-        <div className="bg-custom-white-100 rounded-full px-4 py-2 flex items-center gap-2">
-          <FaMapMarkerAlt className="text-custom-green-200" />
-          <Caption className="text-custom-green-200">{consultation.userCity}</Caption>
-        </div>
-
         {/* Total Price */}
         <div className="bg-custom-white-100 rounded-full px-4 py-2 flex items-center gap-2">
           <MdPayment className="text-custom-green-200" />
@@ -170,6 +163,7 @@ const ConsultationCard: React.FC<ConsultationCardProps> = ({ consultation, onEdi
             Alasan: {consultation.reason === 'architect is unavailable' ? 'Arsitek tidak tersedia' :
                      consultation.reason === 'proof of payment is invalid' ? 'Bukti pembayaran tidak valid' :
                      consultation.reason === 'user cancelled the consultation' ? 'Pengguna membatalkan konsultasi' :
+                     consultation.reason === 'consultation was automatically cancelled by the system' ? 'Dibatalkan otomatis oleh sistem' :
                      consultation.reason}
           </Caption>
         </div>
