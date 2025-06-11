@@ -92,3 +92,55 @@ export async function PATCH(
     });
   }
 }
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id: artikelID } = await params;
+    
+    // Get the authorization header from the incoming request
+    const authHeader = request.headers.get('Authorization');
+    
+    // Forward the request to the actual API
+    const apiUrl = `https://build-better.site/api/v1/articles/${artikelID}`;
+    
+    const response = await fetch(apiUrl, {
+      method: 'DELETE',
+      headers: {
+        ...(authHeader ? { 'Authorization': authHeader } : {})
+      },
+    });
+    
+    // Get the response data
+    let data;
+    try {
+      const text = await response.text();
+      data = text ? JSON.parse(text) : {};
+    } catch (e) {
+      console.warn('Failed to parse JSON response:', e);
+      data = {};
+    }
+    
+    // Return the response with appropriate headers
+    return new Response(JSON.stringify(data), {
+      status: response.status,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+  } catch (error) {
+    console.error('Error in single article DELETE API proxy:', error);
+    return new Response(JSON.stringify({
+      code: 500,
+      status: 'INTERNAL_SERVER_ERROR',
+      error: 'An error occurred while processing your request'
+    }), {
+      status: 500,
+      headers: {
+        'Content-Type': 'application/json'
+      },
+    });
+  }
+}
