@@ -279,7 +279,7 @@ const Artikel: React.FC = () => {
             
             <div className="mb-6">
               <p className="text-custom-olive-50">Apakah Anda yakin ingin menghapus artikel ini?</p>
-              <Caption className="text-custom-gray-200 mt-2">"{artikelToDeleteTitle}"</Caption>
+              <Caption className="text-custom-gray-200 mt-2">{artikelToDeleteTitle}</Caption>
               <Caption className="text-custom-gray-200 mt-2">Tindakan ini tidak dapat dibatalkan.</Caption>
             </div>
             
