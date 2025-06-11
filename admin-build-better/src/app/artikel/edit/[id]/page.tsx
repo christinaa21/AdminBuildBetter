@@ -168,9 +168,7 @@ const EditArticlePage: React.FC = () => {
     const validateForm = (): boolean => {
         const newErrors: FormErrors = {};
         
-        if (!articleData.author.trim()) {
-            newErrors.author = 'Nama penulis wajib diisi';
-        }
+        // Author field is now optional - no validation needed
         
         if (!articleData.title.trim()) {
             newErrors.title = 'Judul artikel wajib diisi';
@@ -200,7 +198,7 @@ const EditArticlePage: React.FC = () => {
         
         const formData = new FormData();
 
-        // Add string data
+        // Add string data (author can be empty string now)
         formData.append('author', articleData.author.trim());
         formData.append('title', articleData.title.trim());
         formData.append('content', articleData.content.trim());
@@ -241,7 +239,8 @@ const EditArticlePage: React.FC = () => {
                     
                     result.error.forEach((errorMsg: string) => {
                         if (errorMsg.includes('author:')) {
-                            newErrors.author = 'Nama penulis wajib diisi';
+                            // Author errors are now less critical since it's optional
+                            newErrors.author = 'Format nama penulis tidak valid';
                         } else if (errorMsg.includes('title:')) {
                             newErrors.title = 'Judul artikel wajib diisi';
                         } else if (errorMsg.includes('banner:')) {
@@ -303,10 +302,10 @@ const EditArticlePage: React.FC = () => {
               
               {/* Form */}
               <div className="mt-8 mb-8">
-                {/* Nama Penulis */}
+                {/* Nama Penulis - Now Optional */}
                 <div className="mb-6">
                     <label className="block text-custom-green-400 mb-2">
-                        Nama Penulis <span className="text-red-500">*</span>
+                        Nama Penulis
                     </label>
                     <input
                         type="text"

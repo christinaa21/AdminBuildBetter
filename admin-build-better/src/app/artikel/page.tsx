@@ -56,6 +56,7 @@ const Artikel: React.FC = () => {
       if (response.ok && result.code === 200) {
         // Store the artikel data
         setArtikels(result.data);
+        console.log(result.data);
       } else if (response.status === 401 || response.status === 403) {
         // Handle unauthorized access
         localStorage.removeItem('authToken');
