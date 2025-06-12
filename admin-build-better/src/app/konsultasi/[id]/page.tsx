@@ -100,7 +100,7 @@ const ApprovalPage: React.FC = () => {
       const token = localStorage.getItem('authToken');
       
       if (!token) {
-        router.push('/login');
+        router.push('/');
         return;
       }
 
@@ -226,7 +226,7 @@ const ApprovalPage: React.FC = () => {
           
           const token = localStorage.getItem('authToken');
           if (!token) {
-              router.push('/login');
+              router.push('/');
               return;
           }
 

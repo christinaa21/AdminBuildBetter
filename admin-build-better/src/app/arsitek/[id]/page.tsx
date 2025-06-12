@@ -54,7 +54,7 @@ const ArchitectDetail = () => {
       const token = localStorage.getItem('authToken');
       
       if (!token) {
-        router.push('/login');
+        router.push('/');
         return;
       }
       
@@ -71,7 +71,7 @@ const ArchitectDetail = () => {
       } else if (response.status === 401 || response.status === 403) {
         localStorage.removeItem('authToken');
         localStorage.removeItem('userData');
-        router.push('/login');
+        router.push('/');
       } else {
         setError('Failed to load architect details. Please try again later.');
       }
@@ -86,7 +86,7 @@ const ArchitectDetail = () => {
   useEffect(() => {
     const token = localStorage.getItem('authToken');
     if (!token) {
-      router.push('/login');
+      router.push('/');
       return;
     }
     

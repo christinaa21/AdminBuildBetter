@@ -148,7 +148,7 @@ const EditHousePage: React.FC = () => {
   useEffect(() => {
     const token = localStorage.getItem('authToken');
     if (!token) {
-      router.push('/login');
+      router.push('/');
       return;
     }
 
@@ -175,7 +175,7 @@ const EditHousePage: React.FC = () => {
         if (response.status === 401 || response.status === 403) {
           localStorage.removeItem('authToken');
           localStorage.removeItem('userData');
-          router.push('/login');
+          router.push('/');
           return;
         }
         throw new Error('Failed to fetch house data');
@@ -287,7 +287,7 @@ const EditHousePage: React.FC = () => {
           // Handle unauthorized access
           localStorage.removeItem('authToken');
           localStorage.removeItem('userData');
-          router.push('/login');
+          router.push('/');
           return;
         }
         throw new Error('Failed to fetch materials');
@@ -681,7 +681,7 @@ const EditHousePage: React.FC = () => {
       const token = localStorage.getItem('authToken');
       
       if (!token) {
-        router.push('/login');
+        router.push('/');
         return;
       }
       
@@ -747,7 +747,7 @@ const EditHousePage: React.FC = () => {
           if (patchResponse.status === 401 || patchResponse.status === 403) {
             localStorage.removeItem('authToken');
             localStorage.removeItem('userData');
-            router.push('/login');
+            router.push('/');
             return;
           }
           const errorResponse = await patchResponse.json();
@@ -791,7 +791,7 @@ const EditHousePage: React.FC = () => {
           if (floorplanResponse.status === 401 || floorplanResponse.status === 403) {
             localStorage.removeItem('authToken');
             localStorage.removeItem('userData');
-            router.push('/login');
+            router.push('/');
             return;
           }
           console.error('Failed to upload floorplans:', await floorplanResponse.json());
@@ -831,7 +831,7 @@ const EditHousePage: React.FC = () => {
             if (fileResponse.status === 401 || fileResponse.status === 403) {
               localStorage.removeItem('authToken');
               localStorage.removeItem('userData');
-              router.push('/login');
+              router.push('/');
               return;
             }
             console.error(`Failed to upload ${upload.type}:`, await fileResponse.json());

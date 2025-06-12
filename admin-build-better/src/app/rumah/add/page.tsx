@@ -120,7 +120,7 @@ const AddHousePage: React.FC = () => {
     const token = localStorage.getItem('authToken');
     if (!token) {
       // Redirect to login if no token is found
-      router.push('/login');
+      router.push('/');
     }
   }, [router]);
 
@@ -133,7 +133,7 @@ const AddHousePage: React.FC = () => {
       const token = localStorage.getItem('authToken');
       
       if (!token) {
-        router.push('/login');
+        router.push('/');
         return;
       }
       
@@ -149,7 +149,7 @@ const AddHousePage: React.FC = () => {
           // Handle unauthorized access
           localStorage.removeItem('authToken');
           localStorage.removeItem('userData');
-          router.push('/login');
+          router.push('/');
           return;
         }
         throw new Error('Failed to fetch materials');
@@ -532,7 +532,7 @@ const AddHousePage: React.FC = () => {
       const token = localStorage.getItem('authToken');
       
       if (!token) {
-        router.push('/login');
+        router.push('/');
         return;
       }
       
@@ -592,7 +592,7 @@ const AddHousePage: React.FC = () => {
         if (initialResponse.status === 401 || initialResponse.status === 403) {
           localStorage.removeItem('authToken');
           localStorage.removeItem('userData');
-          router.push('/login');
+          router.push('/');
           return;
         }
         const errorResponse = await initialResponse.json();
@@ -641,7 +641,7 @@ const AddHousePage: React.FC = () => {
           if (floorplanResponse.status === 401 || floorplanResponse.status === 403) {
             localStorage.removeItem('authToken');
             localStorage.removeItem('userData');
-            router.push('/login');
+            router.push('/');
             return;
           }
           console.error('Failed to upload floorplans:', floorplanResult);
@@ -674,7 +674,7 @@ const AddHousePage: React.FC = () => {
           if (objectResponse.status === 401 || objectResponse.status === 403) {
             localStorage.removeItem('authToken');
             localStorage.removeItem('userData');
-            router.push('/login');
+            router.push('/');
             return;
           }
           console.error('Failed to upload house 3D object:', objectResult);
@@ -714,7 +714,7 @@ const AddHousePage: React.FC = () => {
             if (imageResponse.status === 401 || imageResponse.status === 403) {
               localStorage.removeItem('authToken');
               localStorage.removeItem('userData');
-              router.push('/login');
+              router.push('/');
               return;
             }
             console.error(`Failed to upload ${upload.type}:`, imageResult);
@@ -747,7 +747,7 @@ const AddHousePage: React.FC = () => {
           if (pdfResponse.status === 401 || pdfResponse.status === 403) {
             localStorage.removeItem('authToken');
             localStorage.removeItem('userData');
-            router.push('/login');
+            router.push('/');
             return;
           }
           console.error('Failed to upload house design pdf:', pdfResult);

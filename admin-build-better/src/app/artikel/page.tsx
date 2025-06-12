@@ -40,7 +40,7 @@ const Artikel: React.FC = () => {
       const token = localStorage.getItem('authToken');
       
       if (!token) {
-        router.push('/login');
+        router.push('/');
         return;
       }
       
@@ -61,7 +61,7 @@ const Artikel: React.FC = () => {
         // Handle unauthorized access
         localStorage.removeItem('authToken');
         localStorage.removeItem('userData');
-        router.push('/login');
+        router.push('/');
       } else {
         setError('Failed to load articles. Please try again later.');
       }
@@ -78,7 +78,7 @@ const Artikel: React.FC = () => {
     const token = localStorage.getItem('authToken');
     if (!token) {
       // Redirect to login if no token is found
-      router.push('/login');
+      router.push('/');
       return;
     }
     
@@ -145,7 +145,7 @@ const Artikel: React.FC = () => {
           // Handle unauthorized access
           localStorage.removeItem('authToken');
           localStorage.removeItem('userData');
-          router.push('/login');
+          router.push('/');
         } else {
           setError(`Failed to delete article (${response.status}). Please try again later.`);
         }

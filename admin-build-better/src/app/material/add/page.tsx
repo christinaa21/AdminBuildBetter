@@ -50,7 +50,7 @@ const AddMaterialPage: React.FC = () => {
         const token = localStorage.getItem('authToken');
         if (!token) {
             // Redirect to login if no token is found
-            router.push('/login');
+            router.push('/');
         }
     }, [router]);
 
@@ -185,7 +185,7 @@ const AddMaterialPage: React.FC = () => {
                 // Handle unauthorized access
                 localStorage.removeItem('authToken');
                 localStorage.removeItem('userData');
-                router.push('/login');
+                router.push('/');
             } else {
                 // Handle API errors
                 if (result.error && Array.isArray(result.error)) {

@@ -77,7 +77,7 @@ const Rumah: React.FC = () => {
       const token = localStorage.getItem('authToken');
       
       if (!token) {
-        router.push('/login');
+        router.push('/');
         return;
       }
       
@@ -97,7 +97,7 @@ const Rumah: React.FC = () => {
         // Handle unauthorized access
         localStorage.removeItem('authToken');
         localStorage.removeItem('userData');
-        router.push('/login');
+        router.push('/');
       } else {
         setError('Failed to load houses. Please try again later.');
       }
@@ -114,7 +114,7 @@ const Rumah: React.FC = () => {
     const token = localStorage.getItem('authToken');
     if (!token) {
       // Redirect to login if no token is found
-      router.push('/login');
+      router.push('/');
       return;
     }
     
@@ -181,7 +181,7 @@ const Rumah: React.FC = () => {
           // Handle unauthorized access
           localStorage.removeItem('authToken');
           localStorage.removeItem('userData');
-          router.push('/login');
+          router.push('/');
         } else {
           setError(`Failed to delete house (${response.status}). Please try again later.`);
         }
